@@ -1,0 +1,30 @@
+dependencies:
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.20
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 11.6.7
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.1.8
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.12.2
+- name: node
+  repository: file://../node
+  version: 0.1.0
+- name: node
+  repository: file://../node
+  version: 0.1.0
+- name: node
+  repository: file://../node
+  version: 0.1.0
+- name: node
+  repository: file://../node
+  version: 0.1.0
+- name: node
+  repository: file://../node
+  version: 0.1.0
+digest: sha256:0a8b476390ff0b42f43752c7b74faab5d15e8a42ef7c30b9f24e6fdc59a18f95
+generated: "2022-06-22T06:06:55.897901-03:00"

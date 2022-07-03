@@ -1,0 +1,12 @@
+= Debugger configuration
+
+To setup debugger with webstorm, for application and tests
+its enough to configure it as on images below.
+
+=== Configuration for debugger in application
+image::debugger-application.png[Debugger,600,800]
+=== Configuration for debugger in tests
+
+image::debugger-e2e-tests.png[Debugger,600,800]
+=== Configuration for debugger in e2e tests
+

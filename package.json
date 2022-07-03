@@ -1,0 +1,115 @@
+{
+  "name": "deel-assignment",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "nest build api",
+    "format": "prettier --write \\\\\\\"apps/api/src/**/*.ts\\\\\\\" \\\\\\\"test/**/*.ts\\\\\\\"",
+    "start": "nest start api",
+    "start:dev": "nest start api --watch",
+    "start:debug": "nest start api --debug --watch",
+    "start:prod": "node dist/api/src/main",
+    "db:reset": "yarn db:drop && yarn migrate && yarn db:seed",
+    "db:seed:build": "nest build db",
+    "db:seed": "yarn db:seed:build && node dist/db/main",
+    "db:changes": "yarn typeorm schema:log",
+    "db:drop": "yarn typeorm schema:drop",
+    "migration:create": "yarn typeorm migration:create apps/db/migrations/new-migration",
+    "migration:generate": "yarn typeorm migration:generate apps/db/migrations/new-migration",
+    "migrate": "yarn typeorm migration:run",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d postgress-datasource.ts",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "NODE_ENV=e2e jest --config jest-e2e.json --silent=false",
+    "test:e2e:cov": "NODE_ENV=e2e jest --config jest-e2e.json --silent=false --coverage",
+    "test:e2e:debug": "NODE_ENV=e2e node -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config jest-e2e.json --silent=false --detectOpenHandles",
+    "test:all:cov": "npm run test:cov && npm run test:e2e:cov && npm run coverage:merge",
+    "coverage:merge": "npx istanbul-merge --out coverage.json ./coverage/coverage-final.json ./coverage-e2e/coverage-final.json && npx istanbul report --include coverage.json --dir coverage-all html"
+  },
+  "dependencies": {
+    "@nanogiants/nestjs-swagger-api-exception-decorator": "^1.6.1",
+    "@nestjs/axios": "^0.0.8",
+    "@nestjs/common": "^8.0.0",
+    "@nestjs/core": "^8.0.0",
+    "@nestjs/event-emitter": "^1.1.1",
+    "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/serve-static": "^2.2.2",
+    "@nestjs/swagger": "^5.2.1",
+    "@nestjs/typeorm": "^8.1.4",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.13.2",
+    "lodash": "^4.17.21",
+    "openapi-to-postmanv2": "^3.2.1",
+    "pg": "^8.7.3",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "rxjs": "^7.2.0",
+    "swagger-ui-express": "^4.4.0",
+    "typeorm": "^0.3.7"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^7.3.0",
+    "@nestjs/cli": "^8.0.0",
+    "@nestjs/schematics": "^8.0.0",
+    "@nestjs/testing": "^8.0.0",
+    "@types/express": "^4.17.13",
+    "@types/jest": "27.5.0",
+    "@types/node": "^16.0.0",
+    "@types/supertest": "^2.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "28.0.3",
+    "prettier": "^2.7.1",
+    "source-map-support": "^0.5.20",
+    "supertest": "^6.1.3",
+    "testcontainers": "^8.11.0",
+    "ts-jest": "28.0.1",
+    "ts-loader": "^9.2.3",
+    "ts-node": "^10.0.0",
+    "tsconfig-paths": "4.0.0",
+    "typescript": "^4.3.5"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "@app/(.*)": "<rootDir>/apps/api/src/$1",
+      "@db/(.*)": "<rootDir>/apps/db/$1",
+      "@libs/(.*)": "<rootDir>/apps/libs/$1"
+    },
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      ".interface.(t|j)s",
+      ".spec.(t|j)s",
+      ".e2e-spec.(t|j)s",
+      ".entity.(t|j)s",
+      ".dto.(t|j)s"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/apps/"
+    ]
+  }
+}

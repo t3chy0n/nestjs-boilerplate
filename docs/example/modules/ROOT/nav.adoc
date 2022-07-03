@@ -1,0 +1,12 @@
+* xref:inline-text-formatting.adoc[]
+* xref:special-characters.adoc[]
+* xref:admonition.adoc[]
+* xref:sidebar.adoc[]
+* xref:lukasz.adoc[]
+* xref:ui-macros.adoc[]
+* Lists
+** xref:lists/ordered-list.adoc[]
+** xref:lists/unordered-list.adoc[]
+** Lists2
+*** xref:lists/ordered-list.adoc[]
+*** xref:lists/unordered-list.adoc[]

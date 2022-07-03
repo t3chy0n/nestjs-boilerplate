@@ -1,0 +1,12 @@
+** Architecture
+*** xref:er-diagram.adoc[Diagrams]
+
+
+** Project Configuration
+*** xref:configurations/configuration.adoc[]
+*** xref:configurations/all-configurations.adoc[]
+*** xref:configurations/debugger.adoc[]
+
+
+** Database and Models
+*** xref:db/how-to-add-new-model.adoc[]

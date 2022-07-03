@@ -1,0 +1,7 @@
+export const MODULE_TAG = 'Jobs';
+
+export const Messages = {
+  ERROR_NOT_FOUND: `job.ERROR_NOT_FOUND`,
+  ERROR_INVALID_JOB_LIST: `job.ERROR_INVALID_JOB_LIST`,
+  ERROR_JOB_WAS_ALREADY_PAID: `job.ERROR_JOB_WAS_ALREADY_PAID`,
+};

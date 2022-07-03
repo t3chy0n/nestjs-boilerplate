@@ -1,0 +1,14 @@
+= Project Introduction & Context
+
+This is boilerplate project for nodejs and nestjs.
+
+
+
+== Notes
+- Added header `role` to bypass per user limitation for fetching contracts data. TODO: implement authorization system, based on user roles.
+
+== Limitation
+
+- Use Node version 16.x.x to launch project. Async local storage, which is used for validation pipes, seems to not work as intended in newer versions of Node.
+
+- Request was to use Sequelize. In order to focus as much as possible on production read setup, I decided to use TypeORM. In future implementation can be changed easily thanks to DAO abstraction.

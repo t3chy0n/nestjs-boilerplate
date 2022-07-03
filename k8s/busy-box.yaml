@@ -1,0 +1,49 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: busy-box-deployment
+  labels:
+    payments-tester: local-proxy
+spec:
+  selector:
+    matchLabels:
+      payment-tester: local-proxy
+  template:
+    metadata:
+      name: busy-box
+      labels:
+        app: busy-box
+        payment-tester: local-proxy
+
+    spec:
+      containers:
+        - image: alpine:latest
+          command:
+            - sleep
+            - "15000"
+          imagePullPolicy: Always
+          name: busybox
+
+      nodeSelector:
+        kubernetes.io/os: linux
+
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: busy-box
+  labels:
+    payments-tester: local-proxy
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    payment-tester: local-proxy

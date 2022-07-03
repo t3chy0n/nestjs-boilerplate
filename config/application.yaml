@@ -1,0 +1,23 @@
+port: 8080
+
+config-server:
+  url: 'http://localhost:8888'
+  appName: 'api'
+  enabled: false
+
+
+db:
+  type: postgres
+  host: localhost
+  username: postgres
+  password: admin
+  database: boilerplate
+
+#Configuration for db when application runs in docker-compose
+%docker-compose:
+  db:
+    type: postgres
+    host: postgres
+    username: postgres
+    password: admin
+    database: boilerplate

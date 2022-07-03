@@ -1,0 +1,151 @@
+= Architecture overview
+
+== Entity Relationship Diagram
+
+
+[mermaid,abcd-flowchart,svg]
+....
+erDiagram
+
+        PROFILE  ||--|| CONTRACTOR: "has "
+        PROFILE  ||--|| CLIENT: "has "
+        CONTRACTOR  ||--o{ CONTRACT: "has "
+        CLIENT  ||--o{ CONTRACT: "has "
+        CONTRACT ||--o{ JOB: contains
+
+        JOB {
+            description string
+            price decimal
+            paid boolean
+            paymentDate date
+        }
+        CONTRACT {
+            terms string
+            status ContractStatus
+        }
+        PROFILE {
+            firstName string
+            lastName string
+            profession string
+            balance decimal
+            type UserType
+        }
+....
+
+== Project Architecture
+
+Api architectural design
+
+[plantuml, target=diagram-classes, format=png]
+....
+
+interface HTTP
+
+package "API" {
+  HTTP -- [Job]
+  HTTP -- [Profile]
+  HTTP -- [Contract]
+}
+
+node "Service Layer" {
+  Job -- [JobService]
+  Profile -- [ProfileService]
+  Contract -- [ContractService]
+
+
+}
+
+
+Node "Data Access Layer" {
+  JobService -- [JobDAO]
+  JobDAO -- [Postgres]
+
+  ProfileService -- [ProfileDAO]
+  ProfileDAO -- [Postgres]
+
+  ContractService -- [ContractDAO]
+  ContractDAO -- [Postgres]
+
+}
+
+database "Postgres" {
+  folder "ProfileTable" {
+    [Folder 3]
+  }
+  frame "JobsTable" {
+    [Frame 4]
+  }
+  frame "Contracts" {
+    [Frame 4]
+  }
+}
+
+....
+
+
+== Horizontal scaling
+
+There is a helm chart present in the repository. It's intent was to present possibilities of deplyments
+application to kubernetes. Although it wasn't tested. General idea for horizontal scaling
+would be as follows:
+
+[plantuml, target=component, format=png]
+....
+@startuml
+    [User] ..> LoadBalancer : requests
+
+cloud "Cloud Provider" {
+    node LoadBalancer {
+
+    }
+
+package K8scluster {
+
+      LoadBalancer --> [IngressNginx]
+      LoadBalancer --> [IngressNginx2]
+
+    node "K8s Node 1" {
+      [IngressNginx]
+
+      [InstanceApp1]
+      [InstanceApp2]
+      [InstanceApp3]
+
+      [IngressNginx] -->[InstanceApp1]
+      [IngressNginx] -->[InstanceApp2]
+      [IngressNginx] -->[InstanceApp3]
+
+      [InstanceApp1] --> Postgres
+      [InstanceApp2] --> Postgres
+      [InstanceApp3] --> Postgres
+    }
+
+
+    node "K8s Node 2" {
+      [IngressNginx2] -->[InstanceApp6]
+      [IngressNginx2] -->[InstanceApp4]
+      [IngressNginx2] -->[InstanceApp5]
+
+      [InstanceApp4]
+      [InstanceApp5]
+      [InstanceApp6]
+
+
+      [InstanceApp4] --> Postgres
+      [InstanceApp5] --> Postgres
+      [InstanceApp6] --> Postgres
+    }
+
+}
+
+Package Postgres {
+    [Master]
+    [Replica]
+    [Replica2]
+}
+}
+
+@enduml
+....
+
+

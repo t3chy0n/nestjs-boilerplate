@@ -1,0 +1,97 @@
+= Project Configuration
+
+Proposed implementation of config handler, assumes 3 levels of configuration to give more granular control over configuration. Meaning these are
+
+
+- Spring Cloud config server
+- Yaml configuration - application.yaml
+- Environment variables
+
+-
+
+NOTE: If variable if not configured on top level, config service will be checking lower levels
+until variable is found. If no driver can find a variable
+appropriate exception will be thrown.
+
+In order to provide consistency in accessing configuration values
+some get method accepts path key in following form: `'this.is.example'`
+
+
+== Environmental variables
+
+Environment variables are mapped to json key paths, and later on transformed to json object.
+
+NOTE: Environment variable key needs to start with `app_` prefix in order to be recognized by application as a configuration variable
+
+If you would consider, 2 variables of following form:
+
+- `app_mt_host=http://test.server`
+- `app_mt_port=8080`
+
+This will result in internal json configuration
+
+``` json
+{
+    "mt": {
+      "host": "http://test.server",
+      "port": 8080
+    }
+}
+
+```
+
+
+== YAML application file
+This driver is loading `application.yaml` file and later on converts it to json, as internal representation of configuration
+
+NOTE: In application its possible to leverage profiles. They are determined by NODE_ENV env variable.
+if `NODE_ENV=development`, configuration service will first try to look for variable if `"%development"` subtree
+then try to fallback to original path key. It's working like this with config server and env variables.
+``` yaml
+mt:
+  host: asdsadsd
+  f01:
+    host::
+     'asd'
+    port: 132
+  f02:
+    host: 'asd'
+    port: 132
+  f03:
+    host: 'asd'
+    port: 132
+
+
+app:
+  server1: $mt.f01
+  server2: "123"
+
+
+"%development":
+  config-server:
+    url: "http://dev.localhost:8888"
+
+"%production":
+  config-server:
+    url: "http://dev.localhost:8888"
+
+"%staging":
+  app:
+    somethingElse: "staging"
+```
+
+== YAML file from spring config server
+Same as previous driver, however configuration file is fetched from config server.
+Depending on profile and label, different configurations might be pulled to memory.
+
+In order to start using config server, in application.yaml there has to be following configuration in place
+
+```yaml
+config-server:
+  url: "http://localhost:8888"
+  appName: "api"
+#  label: ""
+#  profile: ""
+  enabled: true
+```
+

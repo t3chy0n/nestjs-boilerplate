@@ -1,0 +1,108 @@
+= All configuration options
+
+
+[cols="1,1,2,1"]
+|===
+|env |yaml |Descriptiom |example
+
+|app_port
+|port
+|Application port
+|8080
+4+| *Config server*
+
+|app_config-server_url
+|config-server.url
+|Url to config server
+|'http://localhost:8888'
+
+|app_config-server_name
+|config-server.name
+|App name recognized by config server
+|'api'
+
+
+| app_config-server_enabled
+|config-server.enabled
+|Flag to toggle config-server
+|false
+
+4+| *Postgres*
+|app_db_type
+|db.type
+|Database type
+|postgres
+
+|app_db_host
+|db.host
+|Database host
+|localhost
+
+
+|app_db_port
+|db.port
+|Database port
+|5432
+
+|app_db_username
+|db.username
+|Database username
+|postgres
+
+|app_db_password
+|db.password
+|Database password
+|admin
+
+|app_db_runMigrations
+|db.runMigrations
+|Should application run migration on startup
+|true
+
+|app_db_database
+|db.database
+|Database port
+|5432
+
+|app_db_logging
+|db.logging
+|Enable db logging
+|false
+
+|app_db_replication
+|db.replication
+|Whether or not replication is enabled. If Enabled look how to configure it through yaml configuration below
+|false
+
+|===
+
+
+
+== Replication configuration for databases
+
+=== Postgress db
+```
+db:
+  type: postgres
+  replication:
+    master:
+      host: "server1",
+      port: 3306,
+      username: "test",
+      password: "test",
+      database: "test"
+
+    slaves:
+    - host: "server2",
+      port: 3306,
+      username: "test",
+      password: "test",
+      database: "test"
+
+    - host: "server3",
+      port: 3306,
+      username: "test",
+      password: "test",
+      database: "test"
+```
+

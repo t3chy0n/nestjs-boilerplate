@@ -1,0 +1,23 @@
+site:
+  title: Boilerplate Api
+  # the 404 page and sitemap files only get generated when the url property is set
+  url: https://localhost:8080/wiki
+  start_page: api::index.adoc
+content:
+  sources:
+    - url: ../
+      branches: [master]
+      start_path: docs/api
+      edit_url: false
+asciidoc:
+  attributes:
+    experimental: ''
+    idprefix: ''
+    idseparator: '-'
+    page-pagination: ''
+  extensions:
+    - asciidoctor-kroki
+ui:
+  bundle:
+    url: ../docs/template
+    snapshot: true

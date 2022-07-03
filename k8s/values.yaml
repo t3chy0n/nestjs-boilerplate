@@ -1,0 +1,60 @@
+
+pullPolicy: &pullPolicy Always
+deploymentUrl: &deploymentUrl api.boilerplate.com
+
+image: &apiBaseImage:
+  repository: tarjei400/boilerplate-api
+  pullPolicy: *pullPolicy
+  tag: latest
+
+annotations: &ingress-annotations
+  kubernetes.io/ingress.class: nginx
+  nginx.ingress.kubernetes.io/use-regex: "true"
+  nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+  cert-manager.io/cluster-issuer: "letsencrypt"
+  nginx.ingress.kubernetes.io/limit-connections: "10"
+  nginx.ingress.kubernetes.io/limit-rps: "10"
+
+postgresql:
+  commonAnnotations:
+    # This makes sure postgress is deployed first
+    helm.sh/hook: "pre-install"
+    helm.sh/hook-weight: "0"
+
+  primary:
+    initdb:
+      user: root
+      password: admin
+
+  auth:
+    enablePostgresUser: true
+    postgresPassword: admin
+    database: boilerplate
+    username: root
+    password: admin
+
+api:
+  image: *apiBaseImage
+  env:
+    NODE_ENV: k8s-sandbox
+    app_port: 8080
+    app_domain: *deploymentUrl
+
+  ingress:
+    annotations:
+      <<: *ingress-annotations
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+      nginx.ingress.kubernetes.io/cors-allow-headers: "x-recaptcha, Accept, Authorization, DNT,X-CustomHeader,X-LANG,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Access-Control-Allow-Origin"
+
+    enabled: true
+    hosts:
+      - host: *deploymentUrl
+        paths:
+          - path: '/'
+            pathType: Prefix
+    tls:
+      - secretName: api-tls
+        hosts:
+          - *deploymentUrl

@@ -1,0 +1,21 @@
+{
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "coverageDirectory": "./coverage-e2e",
+
+  "testTimeout": 300000,
+  "moduleNameMapper": {
+    "@app/(.*)": "<rootDir>/apps/api/src/$1",
+    "@db/(.*)": "<rootDir>/apps/db/$1",
+    "@libs/(.*)": "<rootDir>/apps/libs/$1"
+  }
+}

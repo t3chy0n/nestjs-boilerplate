@@ -1,0 +1,19 @@
+import { DynamicModule, Module } from '@nestjs/common';
+import { ILazyLoaderService } from './lazy-loader-service.interface';
+import { LazyLoaderProviders } from './lazy-loader.providers';
+
+@Module({
+  imports: [],
+  controllers: [],
+  providers: [...LazyLoaderProviders],
+  exports: [ILazyLoaderService],
+})
+export class LazyLoaderModule {
+  static forRoot(): DynamicModule {
+    return {
+      module: LazyLoaderModule,
+      providers: [...LazyLoaderProviders],
+      exports: [ILazyLoaderService],
+    };
+  }
+}

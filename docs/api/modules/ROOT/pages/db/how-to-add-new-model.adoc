@@ -1,0 +1,39 @@
+= How To Add New DB Model
+
+== Here are the steps needed to add a new model (Postgres table) to the app
+ 
+=== 1.create new entity class in your module. example:
+someEntity.ts
+```
+@Entity()
+export class SomeEntity extends BaseEntity {
+  @Column({ nullable: true })
+  guid: string;
+
+  @Column()
+  status: SomeStatus;
+
+  @PrimaryColumn()
+  email: string;
+
+  @PrimaryColumn()
+  login: number;
+
+  constructor(params: Partial<SomeStatus> = {}) {
+    super();
+    Object.assign(this, params);
+  }
+}
+```
+=== 2. Import the entity to `apps/db/const.ts` file.
+=== 3. Generate new migration for the entity:
+1. run this command to generate the migration code for the new entity:
+      ```yarn migration:generate```
+
+  It adds a new migration file to the `apps/db/migrations` folder.
+
+2. Add the new migration to the `apps/db/migrations.provider.ts` array.
+
+now whenever the app starts, it will run the migration and we have the new table in the DB.
+
+

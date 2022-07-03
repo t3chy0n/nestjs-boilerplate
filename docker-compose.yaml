@@ -1,0 +1,43 @@
+version: '3.7'
+services:
+  postgres:
+    image: tarjei400/postgress:latest
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+#      POSTGRES_USER: root
+#      POSTGRES_PASSWORD: admin
+      POSTGRESQL_PASSWORD: admin
+
+      POSTGRES_DB: boilerplate
+      POSTGRESQL_PGAUDIT_LOG_CATALOG: 'on'
+      POSTGRESQL_PGAUDIT_LOG_PARAMETER: 'on'
+      POSTGRESQL_PGAUDIT_LOG: read, write, ddl
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: root
+      POSTGRESQL_REPLICATION_PASSWORD: admin
+      POSTGRESQL_WAL_LEVEL: logical
+
+    networks:
+      - intranet
+
+
+  app:
+    build:
+      context: ./
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./config/application.yaml:/var/application/config/application.yaml
+
+    restart: always
+    environment:
+      NODE_ENV: "docker-compose"
+
+    networks:
+      - intranet
+
+networks:
+  intranet:
