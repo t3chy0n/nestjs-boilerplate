@@ -12,16 +12,13 @@ export class FlinkController {
 
   @Post()
   async post(@Req() request, @Res() response) {
-
     const res = await this.stateFun.handle(request, response);
-    console.log("Called flink, res", res)
     return res;
   }
 
   @Put()
   async put(@Req() request, @Res() response) {
     const res = await this.stateFun.handle(request, response);
-    console.log("Called flink, res", res)
 
     return res;
   }

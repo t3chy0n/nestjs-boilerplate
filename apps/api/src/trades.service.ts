@@ -9,7 +9,9 @@ import { firstValueFrom } from 'rxjs';
 import { FlinkHandler } from '@libs/flink/flink.decorators';
 
 export class TradeDto {
-  SYMBOL: string;
+  symbol: string;
+  openPrice: number;
+  closePrice: number;
 }
 export const GreetRequestType = StateFun.jsonType('example/GreetRequest');
 export const TradeType = StateFun.jsonType<TradeDto>('example/trade');
@@ -30,26 +32,61 @@ export class TradesService {
       },
       {
         name: 'balance',
-        type: StateFun.intType(),
+        type: StateFun.floatType(),
+      },
+      {
+        name: 'pnl',
+        type: StateFun.floatType(),
+      },
+      {
+        name: 'equity',
+        type: StateFun.floatType(),
+      },
+      {
+        name: 'monitored',
+        type: StateFun.booleanType(),
       },
     ],
   })
   test(context: any, message: any, something: any) {
     if (message.is(TradeType)) {
-      console.log('Deliverd trade', message);
       const trade: TradeDto = message.as(TradeType);
+      if (!context.storage.pnl) {
+        context.storage.pnl = 0;
+      }
+      context.storage.pnl =
+        context.storage.pnl + trade.closePrice - trade.openPrice;
     }
     if (message.is(UserType)) {
-      console.log('Deliverd user', message);
       const user: any = message.as(UserType);
+      if (!context.storage.user) {
+        context.storage.user = user;
+      }
+      context.storage.balance = user.balance;
+      context.storage.equity = user.equity;
+
+      if (user.balance < context.storage.user.balance) {
+        console.log('User dropped below initial balance');
+      }
     }
 
+    if (context.storage.pnl) {
+      if (context.storage.pnl < -10) {
+        console.log('Failing challenges', context.storage.user);
+      }
+      if (context.storage.pnl < 0) {
+        // console.log('User has low pnl');
+      }
+      if (context.storage.pnl > 10) {
+        // console.log('User has high pnl');
+      }
+    }
     // const visits = context.storage.visits;
     // console.log('test function', JSON.stringify(context), message, something);
     // console.log('storage', context.storage, context.storage.visits);
 
     // if (!context.storage.visits) {
-    context.storage.balance = 1;
+    // context.storage.balance = 1;
     // }
     // context.storage.visits++;
 
