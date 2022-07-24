@@ -1,5 +1,5 @@
 {
-  "name": "deel-assignment",
+  "name": "boilerplate",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -34,6 +34,8 @@
     "coverage:merge": "npx istanbul-merge --out coverage.json ./coverage/coverage-final.json ./coverage-e2e/coverage-final.json && npx istanbul report --include coverage.json --dir coverage-all html"
   },
   "dependencies": {
+    "@golevelup/nestjs-common": "^1.4.4",
+    "@golevelup/nestjs-discovery": "^3.0.0",
     "@nanogiants/nestjs-swagger-api-exception-decorator": "^1.6.1",
     "@nestjs/axios": "^0.0.8",
     "@nestjs/common": "^8.0.0",
@@ -43,8 +45,12 @@
     "@nestjs/serve-static": "^2.2.2",
     "@nestjs/swagger": "^5.2.1",
     "@nestjs/typeorm": "^8.1.4",
+    "@types/amqplib": "^0.8.2",
+    "amqplib": "^0.10.0",
+    "apache-flink-statefun": "^3.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
+    "kafkajs": "^2.1.0",
     "lodash": "^4.17.21",
     "openapi-to-postmanv2": "^3.2.1",
     "pg": "^8.7.3",

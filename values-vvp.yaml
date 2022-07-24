@@ -1,0 +1,58 @@
+vvp:
+
+  ### Configure VVP to use a local SQLite database
+  persistence:
+    type: local
+
+  ### Configure Minio for Universal Blob Storage
+  blobStorage:
+    baseUri: s3://vvp
+    s3:
+      endpoint: http://minio.vvp.svc:9000
+
+  ### Configure some global defaults for Deployments in this instance of Ververica Platform
+  globalDeploymentDefaults: |
+    spec:
+      state: RUNNING
+      template:
+        spec:
+          resources:
+            jobmanager:
+              cpu: 0.5
+              memory: 1G
+            taskmanager:
+              cpu: 0.5
+              memory: 1G
+          flinkConfiguration:
+            state.backend: filesystem
+            taskmanager.memory.managed.fraction: 0.0 # no managed memory needed for filesystem statebackend
+            high-availability: vvp-kubernetes
+            metrics.reporter.prom.class: org.apache.flink.metrics.prometheus.PrometheusReporter
+            execution.checkpointing.interval: 10s
+            execution.checkpointing.externalized-checkpoint-retention: RETAIN_ON_CANCELLATION
+  ### Decrease the JobGraph translation thread pool size. This reduces our worst-case memory
+  ### requirements by reducing the number of translations that can happen in parallel.
+  ###
+  ### See also: https://docs.ververica.com/platform_operations/advanced/sql.html
+  sqlService:
+    pool:
+      coreSize: 1
+      maxSize: 1
+
+blobStorageCredentials:
+  s3:
+    accessKeyId: admin
+    secretAccessKey: password
+
+### Allow Ververica Platform to manage Apache Flink deployments in "vvp-jobs" namespace
+rbac:
+  additionalNamespaces:
+  - vvp-jobs
+
+### Reduce gateway container memory requests.
+gateway:
+  resources:
+    limits:
+      memory: 1Gi
+    requests:
+      memory: 1Gi

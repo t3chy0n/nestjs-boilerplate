@@ -6,6 +6,98 @@ config-server:
   enabled: false
 
 
+messaging:
+  connections:
+    rabbitmq:
+      - name: default
+        protocol: 'amqp'
+        port: 5672
+        username: 'user'
+        password: 'bitnami'
+        host: 'amqp://localhost'
+    kafka:
+      - name: default
+        brokers:
+          - "localhost:9092"
+
+#        ssl: false
+#        sasl?: SASLOptions //TODO
+        clientId: "ClientId"
+#        logLevel: 5
+#        connectionTimeout: 3000
+#        authenticationTimeout: 4000
+#        reauthenticationThreshold: 100
+#        requestTimeout: 5000
+#        enforceRequestTimeout: false
+
+        consumer:
+          groupId: "UniqueConsumerGroupId"
+#          partitionAssigners?: PartitionAssigner[]
+#          metadataMaxAge?: number
+#          sessionTimeout?: number
+#          rebalanceTimeout?: number
+#          heartbeatInterval?: number
+#          maxBytesPerPartition?: number
+#          minBytes?: number
+#          maxBytes?: number
+#          maxWaitTimeInMs?: number
+          allowAutoTopicCreation: true
+#          maxInFlightRequests?: number
+#          readUncommitted?: boolean
+#          rackId?: string
+        producer:
+#           createPartitioner?: ICustomPartitioner
+#           retry?: RetryOptions
+#           metadataMaxAge?: number
+          allowAutoTopicCreation: true
+#          idempotent: true
+#          transactionalId?: string
+#          transactionTimeout?: number
+#          maxInFlightRequests?: number
+
+#        retry?: RetryOptions
+#        socketFactory?: ISocketFactory
+#        logLevel?: logLevel
+#        logCreator?: logCreator
+#    kafka:
+#      - name: default
+#        host: 'localhost'
+#        port: 5672
+
+  incoming:
+    test_outgoing_message:
+      driver: rabbitmq
+      routingKeys:
+        - routing.key1
+
+      queue:
+        name: 'test_queue'
+      exchange:
+        name: 'test_exchange'
+        type: 'topic'
+
+    test_outgoing_kafka_message:
+      driver: kafka
+      topic: "kafka-topic"
+
+  outgoing:
+    test_outgoing_message:
+      driver: rabbitmq
+      exchange: 'test_exchange'
+      routingKey: routing.key1
+    test_outgoing_message2:
+      driver: rabbitmq
+      exchange: 'test_exchange2'
+      routingKey: routing.key2
+
+    test_outgoing_kafka_message:
+      driver: kafka
+      topic: "kafka-topic"
+
+#    test.outgoing.message2:
+#      driver: kafka
+#      topic: 'test_kafka_topic'
+
 db:
   type: postgres
   host: localhost

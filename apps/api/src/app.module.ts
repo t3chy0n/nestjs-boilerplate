@@ -13,9 +13,14 @@ import { ExceptionsModule } from '@libs/exceptions/exceptions.module';
 import * as path from 'path';
 
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { MessagingModule } from '@libs/messaging/messaging.module';
+import { TradesService } from '@app/trades.service';
+import { FlinkFunctionsModule } from '@libs/flink/flink-functions.installer';
 
 const modules = [
   DbModule,
+  FlinkFunctionsModule,
+  MessagingModule.forRoot(),
   RequestContextModule,
   ExceptionsModule.forRoot(),
   TypeOrmModule.forRootAsync({
@@ -45,6 +50,6 @@ if (process.env.NODE_ENV !== 'production') {
 @Module({
   imports: modules,
   controllers: [AppController],
-  providers: [AppService, RequestScopedValidationPipe],
+  providers: [AppService, RequestScopedValidationPipe, TradesService],
 })
 export class AppModule {}

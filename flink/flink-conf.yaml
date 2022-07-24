@@ -1,0 +1,24 @@
+statefun.flink-job-name: Statefun Application
+
+classloader.parent-first-patterns.additional: org.apache.flink.statefun;org.apache.kafka;com.google.protobuf
+
+restart-strategy: fixed-delay
+restart-strategy.fixed-delay.attempts: 2147483647
+restart-strategy.fixed-delay.delay: 1sec
+
+state.backend: rocksdb
+state.backend.rocksdb.timer-service.factory: ROCKSDB
+state.backend.rocksdb.memory.partitioned-index-filters: true
+state.backend.rocksdb.checkpoint.transfer.thread.num: 8
+state.backend.rocksdb.thread.num: 4
+state.backend.incremental: true
+
+jobmanager.memory.process.size: 1g
+taskmanager.memory.process.size: 4g
+
+heartbeat.interval: 1000
+heartbeat.timeout: 5000
+
+rest.flamegraph.enabled: true
+web.backpressure.refresh-interval: 10000
+statefun.async.max-per-task: 100000

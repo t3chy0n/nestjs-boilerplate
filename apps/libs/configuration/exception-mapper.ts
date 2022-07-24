@@ -21,7 +21,7 @@ export class ConfigurationExceptionMapper implements IExceptionMapper {
 
     console.log('Error:', err);
     throw new ConfigUnknownException(
-      `Unknown exception occoursed when loading configuration`,
+      `Unknown exception occoured when loading configuration`,
       err,
     );
   }
