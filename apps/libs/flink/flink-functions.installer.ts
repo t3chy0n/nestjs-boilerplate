@@ -19,9 +19,19 @@ import {
 } from './flink.contsnts';
 import { FlinkController } from './flink.controller';
 import { FlinkClient } from './flink.client';
+import { FlinkParamTypes } from '@libs/flink/flink.decorators';
 
 export class FlinkParamsFactory implements ParamsFactory {
   exchangeKeyForValue(type: number, data: ParamData, args: any): any {
+    switch (type) {
+      case FlinkParamTypes.MESSAGE:
+      case FlinkParamTypes.CONTEXT:
+        return args[type];
+      case FlinkParamTypes.STORAGE:
+        return args[FlinkParamTypes.CONTEXT]?.storage;
+      default:
+        return null;
+    }
     console.log('Flink debug', type, data, args);
   }
 }

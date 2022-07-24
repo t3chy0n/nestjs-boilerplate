@@ -12,6 +12,7 @@ import {
   of,
   repeat,
   retry,
+  shareReplay,
   Subscription,
   switchMap,
   tap,
@@ -51,6 +52,8 @@ export class KafkaConnection implements IMessagingConnection {
       mergeMap((connection) => connection.producer.connect()),
       mergeMap((reply) => reply.connection.consumer.connect()),
       mergeMap((reply) => of(reply.connection)),
+      tap(() => this.logger.log('Kafka connection created')),
+      shareReplay(),
     );
 
     this.name = configData.name;
@@ -110,7 +113,7 @@ export class KafkaConnection implements IMessagingConnection {
           ),
         ),
         catchError((err, caught) => {
-          this.logger.error(`${err.message}`);
+          this.logger.error(`Caught kafka error ${err.message}`);
           this.logger.error(`${err.stack}`);
 
           return throwError(err);
@@ -156,7 +159,7 @@ export class KafkaConnection implements IMessagingConnection {
         ),
 
         catchError((err, caught) => {
-          this.logger.error(`${err.message}`);
+          this.logger.error(`Caught kafka consumer error: ${err.message}`);
           this.logger.error(`${err.stack}`);
 
           return throwError(err);

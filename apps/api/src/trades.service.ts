@@ -6,7 +6,12 @@ import {
   StateFun,
 } from 'apache-flink-statefun';
 import { firstValueFrom } from 'rxjs';
-import { FlinkHandler } from '@libs/flink/flink.decorators';
+import {
+  Context,
+  FlinkHandler,
+  Message,
+  Storage,
+} from '@libs/flink/flink.decorators';
 
 export class TradeDto {
   symbol: string;
@@ -48,7 +53,14 @@ export class TradesService {
       },
     ],
   })
-  test(context: any, message: any, something: any) {
+  test(
+    context: any,
+    message: any,
+    something: any,
+    @Message() msg,
+    @Storage() storage,
+    @Context() ctx,
+  ) {
     if (message.is(TradeType)) {
       const trade: TradeDto = message.as(TradeType);
       if (!context.storage.pnl) {

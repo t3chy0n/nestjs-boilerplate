@@ -1,5 +1,8 @@
 export const FLINK_HANDLER = Symbol('FLINK_HANDLER');
 export const FLINK_CONFIG_TOKEN = Symbol('FLINK_CONFIG_TOKEN');
+export const FLINK_STORAGE = Symbol('FLINK_STORAGE_TOKEN');
+export const FLINK_MESSAGE = Symbol('FLINK_MESSAGE_TOKEN');
+export const FLINK_MESSAGE_AS = Symbol('FLINK_MESSAGE_AS_TOKEN');
 export const FLINK_ARGS_METADATA = 'FLINK_ARGS_METADATA';
 export const FLINK_PARAM_TYPE = 3;
 
