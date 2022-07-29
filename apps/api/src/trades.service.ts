@@ -53,43 +53,35 @@ export class TradesService {
       },
     ],
   })
-  test(
-    context: any,
-    message: any,
-    something: any,
-    @Message() msg,
-    @Storage() storage,
-    @Context() ctx,
-  ) {
+  test(@Message() message, @Storage() storage, @Context() ctx) {
     if (message.is(TradeType)) {
       const trade: TradeDto = message.as(TradeType);
-      if (!context.storage.pnl) {
-        context.storage.pnl = 0;
+      if (!storage.pnl) {
+        storage.pnl = 0;
       }
-      context.storage.pnl =
-        context.storage.pnl + trade.closePrice - trade.openPrice;
+      storage.pnl = storage.pnl + trade.closePrice - trade.openPrice;
     }
     if (message.is(UserType)) {
       const user: any = message.as(UserType);
-      if (!context.storage.user) {
-        context.storage.user = user;
+      if (!storage.user) {
+        storage.user = user;
       }
-      context.storage.balance = user.balance;
-      context.storage.equity = user.equity;
+      storage.balance = user.balance;
+      storage.equity = user.equity;
 
-      if (user.balance < context.storage.user.balance) {
+      if (user.balance < storage.user.balance) {
         console.log('User dropped below initial balance');
       }
     }
 
-    if (context.storage.pnl) {
-      if (context.storage.pnl < -10) {
-        console.log('Failing challenges', context.storage.user);
+    if (storage.pnl) {
+      if (storage.pnl < -10) {
+        console.log('Failing challenges', storage.user);
       }
-      if (context.storage.pnl < 0) {
+      if (storage.pnl < 0) {
         // console.log('User has low pnl');
       }
-      if (context.storage.pnl > 10) {
+      if (storage.pnl > 10) {
         // console.log('User has high pnl');
       }
     }

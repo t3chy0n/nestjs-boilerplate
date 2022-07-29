@@ -4,6 +4,7 @@ import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discov
 export class IncomingChannelDto {
   public routingKeys: string[] = [];
   public topic: string;
+  public event: string;
   public queue: string;
   public exchange: string;
   public exchangeType: string;
@@ -26,6 +27,7 @@ export class IncomingChannelDto {
       routingKeys: config.routingKeys ?? [],
       routingKey: config.routingKey,
       topic: config.topic,
+      event: config.event,
       queueDurable: config.queueDurable,
       acknowledgements: config.acknowledgements,
     });

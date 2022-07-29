@@ -13,5 +13,5 @@ export abstract class IConfigServerConfiguration {
 
   abstract getAppName(): string;
 
-  abstract getConfigurationUrl(): string;
+  abstract getConfigurationUrl(): string[];
 }

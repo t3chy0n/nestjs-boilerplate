@@ -110,7 +110,10 @@ export class MessagingInstaller implements OnApplicationBootstrap {
             channelConfig.driver,
           );
           const handler = this.createHandler(method);
-          const dto = OutgoingChannelDto.toDto(method, channelConfig);
+          const dto = OutgoingChannelDto.toDto(method, {
+            ...channelConfig,
+            event: config.event,
+          });
 
           const decoratedMethod = function (...args) {
             const payload = handler.call(instance, ...args);
@@ -151,7 +154,10 @@ export class MessagingInstaller implements OnApplicationBootstrap {
             channelConfig.driver,
           );
           const handler = this.createHandler(method);
-          const dto = IncomingChannelDto.toDto(method, channelConfig);
+          const dto = IncomingChannelDto.toDto(method, {
+            ...channelConfig,
+            event: config.event,
+          });
 
           const matchingConnections = this.connections.filter(
             (conn) => conn.driver === channelConfig.driver,

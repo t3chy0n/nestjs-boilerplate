@@ -10,7 +10,7 @@ export class ConfigServerConfiguration implements IConfigServerConfiguration {
   constructor(private readonly config: IBootstrapConfiguration) {}
 
   getProfile(): string {
-    return process.env.NODE_ENV;
+    return this.config.get(Config.Profile, null);
   }
 
   isEnabled(): boolean {
@@ -36,19 +36,25 @@ export class ConfigServerConfiguration implements IConfigServerConfiguration {
    *  - /application-profile.yaml
    *  - /application.yaml
    */
-  getConfigurationUrl(): string {
+  getConfigurationUrl(): string[] {
     const profile = this.getProfile();
-    const label = this.getLabel();
+    const labelString = this.getLabel();
     const appName = this.getAppName();
     const url = this.getUrl();
 
-    if (profile && label) {
-      return `${url}/${label}/${appName}-${profile}.yaml`;
+    const labels = labelString?.split(',') || [];
+
+    if (labels.length > 0) {
+      return labels.map((label) => {
+        return profile
+          ? `${url}/${label}/${appName}-${profile}.json`
+          : `${url}/${label}/${appName}.json`;
+      });
     }
-    if (profile && !label) {
-      return `${url}/${appName}-${profile}.yaml`;
+    if (profile && labels.length == 0) {
+      return [`${url}/${appName}-${profile}.json`];
     }
 
-    return `${url}/${appName}.yaml`;
+    return [`${url}/${appName}.json`];
   }
 }

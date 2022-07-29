@@ -63,6 +63,93 @@ export class RabbitmqConnection implements IMessagingConnection {
     this.outgoing.push(dto);
   }
 
+  handleIncomingMessages(
+    channel$: Observable<RxChannel>,
+    incoming: IncomingChannelDto,
+  ) {
+    return channel$.pipe(
+      mergeMap((channel) =>
+        channel.assertExchange(incoming.exchange, incoming.exchangeType),
+      ),
+      mergeMap((reply) =>
+        reply.channel.assertQueue(incoming.queue, {
+          durable: incoming.queueDurable,
+        }),
+      ),
+
+      mergeMap((reply) =>
+        reply.channel.bindQueue(
+          incoming.queue,
+          incoming.exchange,
+          incoming.routingKey,
+        ),
+      ),
+
+      switchMap((reply) =>
+        reply.channel.consume(incoming.queue, {
+          noAck: true,
+        }),
+      ),
+
+      tap((message) => {
+        if (!incoming.callback) {
+          return;
+        }
+        const p = new Payload();
+        p.content = message.content;
+        incoming.callback(
+          new IncomingChannelDto(),
+          {
+            content: message.content,
+          },
+          p,
+        );
+      }),
+    );
+  }
+
+  handleOutgoingMessages(
+    channel$: Observable<RxChannel>,
+    outgoing: OutgoingChannelDto,
+  ) {
+    return channel$.pipe(
+      mergeMap((channel) =>
+        channel.assertExchange(outgoing.exchange, outgoing.exchangeType),
+      ),
+      switchMap((reply) => {
+        return of(outgoing.publicator$.asObservable(), of(reply)).pipe(
+          combineLatestAll(),
+          switchMap(([buffer, reply]: [any, AssertExchangeReply]) => {
+            this.logger.log('Publishing to exchange', outgoing.exchange);
+
+            return of(buffer).pipe(
+              mergeMap((value: any) => {
+                return of(JSON.stringify(value));
+              }),
+              mergeMap((payload: string) => {
+                const res = reply.channel.publish(
+                  outgoing.exchange,
+                  outgoing.routingKey,
+                  new Buffer(payload),
+                );
+                return of(res);
+              }),
+            );
+          }),
+        );
+      }),
+    );
+  }
+
+  handleError() {
+    return catchError((err, caught) => {
+      this.logger.error(`${err}`);
+      this.logger.error(`${err.message}`);
+      this.logger.error(`${err.stack}`);
+
+      return throwError(err);
+    });
+  }
   initialize() {
     this.subscription = this.connection$
       .pipe(
@@ -71,100 +158,19 @@ export class RabbitmqConnection implements IMessagingConnection {
             /***
              * Map all incoming channels to handle messages within same shared connection
              */
-            ...this.incoming.map((incoming) => {
-              return shared$.pipe(
-                mergeMap((channel) =>
-                  channel.assertExchange(
-                    incoming.exchange,
-                    incoming.exchangeType,
-                  ),
-                ),
-                mergeMap((reply) =>
-                  reply.channel.assertQueue(incoming.queue, {
-                    durable: incoming.queueDurable,
-                  }),
-                ),
-
-                mergeMap((reply) =>
-                  reply.channel.bindQueue(
-                    incoming.queue,
-                    incoming.exchange,
-                    incoming.routingKey,
-                  ),
-                ),
-
-                switchMap((reply) =>
-                  reply.channel.consume(incoming.queue, {
-                    noAck: true,
-                  }),
-                ),
-
-                tap((message) => {
-                  if (!incoming.callback) {
-                    return;
-                  }
-                  const p = new Payload();
-                  p.content = message.content;
-                  incoming.callback(
-                    new IncomingChannelDto(),
-                    {
-                      content: message.content,
-                    },
-                    p,
-                  );
-                }),
-              );
-            }),
+            ...this.incoming.map((incoming) =>
+              this.handleIncomingMessages(shared$, incoming),
+            ),
 
             /***
              * Map all outgoing channels to handle messages within same shared connection
              */
-            ...this.outgoing.map((outgoing) => {
-              return shared$.pipe(
-                mergeMap((channel) =>
-                  channel.assertExchange(
-                    outgoing.exchange,
-                    outgoing.exchangeType,
-                  ),
-                ),
-                switchMap((reply) => {
-                  return of(
-                    outgoing.publicator$.asObservable(),
-                    of(reply),
-                  ).pipe(
-                    combineLatestAll(),
-                    switchMap(([buffer, reply]: [any, AssertExchangeReply]) => {
-                      this.logger.log(
-                        'Publishing to exchange',
-                        outgoing.exchange,
-                      );
-
-                      return of(buffer).pipe(
-                        mergeMap((value: any) => {
-                          return of(JSON.stringify(value));
-                        }),
-                        mergeMap((payload: string) => {
-                          const res = reply.channel.publish(
-                            outgoing.exchange,
-                            outgoing.routingKey,
-                            new Buffer(payload),
-                          );
-                          return of(res);
-                        }),
-                      );
-                    }),
-                  );
-                }),
-              );
-            }),
+            ...this.outgoing.map((outgoing) =>
+              this.handleOutgoingMessages(shared$, outgoing),
+            ),
           ),
         ),
-        catchError((err, caught) => {
-          this.logger.error(`${err.message}`);
-          this.logger.error(`${err.stack}`);
-
-          return throwError(err);
-        }),
+        this.handleError(),
         repeat({ delay: 4000 }),
         retry({
           delay: 4000,

@@ -48,8 +48,8 @@ export class RxKafkaLib {
         const connectionDisposer = new Subscription(async () => {
           console.log('disposing kafka connection');
           try {
-            // await consumer.disconnect();
-            // await producer.disconnect();
+            await consumer.disconnect();
+            await producer.disconnect();
           } catch (error: any) {
             console.log('already closed');
           }

@@ -24,6 +24,7 @@ import { ILogger } from '@libs/logger/logger.interface';
 import RxKafkaLib from '@libs/messaging/drivers/kafka/rx/RxKafkaLib';
 import { catchError, map } from 'rxjs/operators';
 import { Injectable } from '@nestjs/common';
+import RxMessage from '@libs/messaging/drivers/kafka/rx/RxMessage';
 
 const RETRY_AFTER = 20000;
 
@@ -67,6 +68,67 @@ export class KafkaConnection implements IMessagingConnection {
     this.outgoing.push(dto);
   }
 
+  handleError() {
+    return catchError((err, caught) => {
+      this.logger.error(`Caught kafka consumer error`);
+      this.logger.error(`${err}`);
+      this.logger.error(`${err.message}`);
+      this.logger.error(`${err.stack}`);
+
+      return throwError(err);
+    });
+  }
+
+  handleOutgoingMessages(
+    out$: Observable<RxConnection>,
+    outgoing: OutgoingChannelDto,
+  ) {
+    return out$.pipe(
+      switchMap((connetion) => {
+        return of(outgoing.publicator$.asObservable(), of(connetion)).pipe(
+          combineLatestAll(),
+          switchMap(([buffer, { producer }]: [any, RxConnection]) => {
+            this.logger.log('Publishing to kafka topic', outgoing.topic);
+
+            return of(buffer).pipe(
+              mergeMap((value: any) => {
+                return of(JSON.stringify(value));
+              }),
+              mergeMap((payload: string) => {
+                // acks?: number
+                // timeout?: number
+                // compression?: CompressionTypes
+                const res = producer.send({
+                  topic: outgoing.topic,
+                  messages: [{ value: payload }],
+                });
+
+                return of(res);
+              }),
+            );
+          }),
+        );
+      }),
+    );
+  }
+
+  handleIncomingMessages(
+    con$: Observable<RxMessage>,
+    incoming: IncomingChannelDto,
+  ) {
+    return con$.pipe(
+      filter((message) => message.topic === incoming.topic),
+      tap((message) => {
+        if (!incoming.callback) {
+          return;
+        }
+        incoming.callback(new IncomingChannelDto(), {
+          content: message.message.value.toString(),
+        });
+      }),
+    );
+  }
+
   initialize() {
     this.publisherSubscription = this.connection$
       .pipe(
@@ -75,49 +137,12 @@ export class KafkaConnection implements IMessagingConnection {
          */
         connect((shared$) =>
           merge(
-            ...this.outgoing.map((outgoing) => {
-              return shared$.pipe(
-                switchMap((connetion) => {
-                  return of(
-                    outgoing.publicator$.asObservable(),
-                    of(connetion),
-                  ).pipe(
-                    combineLatestAll(),
-                    switchMap(([buffer, { producer }]: [any, RxConnection]) => {
-                      this.logger.log(
-                        'Publishing to kafka topic',
-                        outgoing.topic,
-                      );
-
-                      return of(buffer).pipe(
-                        mergeMap((value: any) => {
-                          return of(JSON.stringify(value));
-                        }),
-                        mergeMap((payload: string) => {
-                          // acks?: number
-                          // timeout?: number
-                          // compression?: CompressionTypes
-                          const res = producer.send({
-                            topic: outgoing.topic,
-                            messages: [{ value: payload }],
-                          });
-
-                          return of(res);
-                        }),
-                      );
-                    }),
-                  );
-                }),
-              );
-            }),
+            ...this.outgoing.map((outgoing) =>
+              this.handleOutgoingMessages(shared$, outgoing),
+            ),
           ),
         ),
-        catchError((err, caught) => {
-          this.logger.error(`Caught kafka error ${err.message}`);
-          this.logger.error(`${err.stack}`);
-
-          return throwError(err);
-        }),
+        this.handleError(),
         repeat({ delay: RETRY_AFTER }),
         retry({
           delay: RETRY_AFTER,
@@ -139,38 +164,20 @@ export class KafkaConnection implements IMessagingConnection {
 
         connect((shared$) =>
           merge(
-            /***
-             * Map all incoming channels to handle messages within same shared connection
-             */
             ...this.incoming.map((incoming) =>
-              shared$.pipe(
-                filter((message) => message.topic === incoming.topic),
-                tap((message) => {
-                  if (!incoming.callback) {
-                    return;
-                  }
-                  incoming.callback(new IncomingChannelDto(), {
-                    content: message.message.value.toString(),
-                  });
-                }),
-              ),
+              this.handleIncomingMessages(shared$, incoming),
             ),
           ),
         ),
 
-        catchError((err, caught) => {
-          this.logger.error(`Caught kafka consumer error: ${err.message}`);
-          this.logger.error(`${err.stack}`);
-
-          return throwError(err);
-        }),
+        this.handleError(),
         repeat({ delay: RETRY_AFTER }),
         retry({
           delay: RETRY_AFTER,
         }),
       )
       .subscribe({
-        next: (message) => this.logger.error(`subs message ${message}`),
+        next: (message) => {},
         error: (error) => this.logger.error(`pubc subs error ${error}`),
         complete: () => this.logger.error('pubs complete'),
       });

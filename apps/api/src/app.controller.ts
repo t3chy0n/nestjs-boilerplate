@@ -114,6 +114,6 @@ export class AppController {
    */
   @Get()
   getHealth() {
-    return this.appService.getHelloKafka({ content: '' });
+    return this.appService.getHello5('asdasd');
   }
 }

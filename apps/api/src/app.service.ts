@@ -34,6 +34,18 @@ export class AppService {
     return 'Hello World!';
   }
 
+  @Outgoing('test_outgoing_message4')
+  @Incoming('test_outgoing_message5')
+  getHello4(@Message() msg: Payload, @Connection() msg2: Payload): string {
+    console.log('Received message');
+    return 'Hello World!';
+  }
+
+  @Outgoing('test_outgoing_message5')
+  getHello5(msg: string) {
+    return msg;
+  }
+
   getHello3(msg: any): string {
     return 'Hello World!';
   }

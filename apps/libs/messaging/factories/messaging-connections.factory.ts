@@ -3,7 +3,7 @@ import { NoEventBusFoundException } from '../exceptions/no-event-bus-found-excep
 import { MessagingDriver } from '@libs/messaging/consts';
 import { MessagingConfiguration } from '@libs/messaging/messaging.configuration';
 import {
-  IEventEmitterEventBusConnectionFactory,
+  IEventEmitterConnectionFactory,
   IKafkaConnectionFactory,
   IMessagingConnectionFactory,
   IRabbitMqConnectionFactory,
@@ -17,6 +17,7 @@ export class MessagingConnectionsFactory {
 
     private readonly rabbitMqFactory: IRabbitMqConnectionFactory, // private readonly eventEmitterFactory: IEventEmitterEventBusConnectionFactory,
     private readonly kafkaMqFactory: IKafkaConnectionFactory, // private readonly eventEmitterFactory: IEventEmitterEventBusConnectionFactory,
+    private readonly eventEmitterFactory: IEventEmitterConnectionFactory, // private readonly eventEmitterFactory: IEventEmitterEventBusConnectionFactory,
   ) {}
 
   selectFactory(driver: MessagingDriver): IMessagingConnectionFactory {
@@ -26,9 +27,9 @@ export class MessagingConnectionsFactory {
     if (MessagingDriver.KAFKA == driver) {
       return this.kafkaMqFactory;
     }
-    // if (MessagingDriver.MEMORY == driver) {
-    //   return this.eventEmitterFactory;
-    // }
+    if (MessagingDriver.MEMORY == driver) {
+      return this.eventEmitterFactory;
+    }
     throw new NoEventBusFoundException();
   }
 

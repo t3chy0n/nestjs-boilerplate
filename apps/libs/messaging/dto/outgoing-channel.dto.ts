@@ -4,6 +4,7 @@ import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discov
 export class OutgoingChannelDto {
   public publicator$: Subject<any> = new Subject<any>();
   public topic: string;
+  public event: string;
   public exchange: string;
   public exchangeType = 'topic';
   public routingKey: string;
@@ -17,6 +18,7 @@ export class OutgoingChannelDto {
 
     return new OutgoingChannelDto({
       topic: config.topic,
+      event: config.event,
       exchange: config.exchange,
       routingKey: config.routingKey,
     });

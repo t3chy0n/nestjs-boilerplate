@@ -33,9 +33,9 @@ export class HttpLoggerInterceptor implements NestInterceptor {
     const method = request.method;
     const url = request.originalUrl;
 
-    this.logger.debug(
-      `Request ${request.method} ${request.path} - body: ${stringifiedBody} headers: ${stringifiedHeaders}`,
-    );
+    // this.logger.debug(
+    //   `Request ${request.method} ${request.path} - body: ${stringifiedBody} headers: ${stringifiedHeaders}`,
+    // );
 
     return next.handle().pipe(
       tap((rawBody) => {
@@ -43,9 +43,9 @@ export class HttpLoggerInterceptor implements NestInterceptor {
         const stringifiedBody = JSON.stringify(body);
 
         const delay = Date.now() - now;
-        this.logger.debug(
-          `Response ${request.method} ${request.path} - body: ${stringifiedBody} - ${delay}ms`,
-        );
+        // this.logger.debug(
+        //   `Response ${request.method} ${request.path} - body: ${stringifiedBody} - ${delay}ms`,
+        // );
       }),
       catchError((error: HttpException) => {
         if (error instanceof HttpException) {

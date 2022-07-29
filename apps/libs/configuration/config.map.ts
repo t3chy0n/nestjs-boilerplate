@@ -2,6 +2,8 @@ export const Config = {
   Logger: {
     Severities: 'logger.severities',
   },
+  Profile: 'profile',
+
   ConfigServer: {
     Url: 'config-server.url',
     AppName: 'config-server.appName',

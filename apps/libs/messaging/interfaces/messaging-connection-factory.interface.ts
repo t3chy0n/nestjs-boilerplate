@@ -7,4 +7,4 @@ export abstract class IMessagingConnectionFactory {
 export abstract class IRabbitMqConnectionFactory extends IMessagingConnectionFactory {}
 export abstract class IKafkaConnectionFactory extends IMessagingConnectionFactory {}
 export abstract class ISqsConnectionFactory extends IMessagingConnectionFactory {}
-export abstract class IEventEmitterEventBusConnectionFactory extends IMessagingConnectionFactory {}
+export abstract class IEventEmitterConnectionFactory extends IMessagingConnectionFactory {}
