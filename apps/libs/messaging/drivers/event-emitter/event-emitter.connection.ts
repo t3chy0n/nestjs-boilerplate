@@ -20,8 +20,8 @@ import {
 import { MessagingConfiguration } from '@libs/messaging/messaging.configuration';
 import { ILogger } from '@libs/logger/logger.interface';
 import { catchError } from 'rxjs/operators';
-import RxEventEmitterLib from '@libs/messaging/drivers/event-emitter/rx/RxEventEmitterLib';
-import { RxChannel } from '@libs/messaging/drivers/event-emitter/rx/RxChannel';
+import RxEventEmitterLib from '@libs/messaging/drivers/event-emitter/rx/event-emitter-lib.rx';
+import { RxChannel } from '@libs/messaging/drivers/event-emitter/rx/channel.rx';
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 import { Injectable } from '@nestjs/common';
 
@@ -99,13 +99,15 @@ export class EventEmitterConnection implements IMessagingConnection {
     return con$.pipe(
       mergeMap((channel) => channel.subscribe(incoming.event)),
       filter((message) => message.event === incoming.event),
-      tap((message) => {
+      tap((rxMessage) => {
         if (!incoming.callback) {
           return;
         }
-        incoming.callback(new IncomingChannelDto(), {
-          content: message,
-        });
+        incoming.callback(
+          new IncomingChannelDto(),
+          rxMessage,
+          rxMessage.message,
+        );
       }),
     );
   }

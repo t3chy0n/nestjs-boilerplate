@@ -8,14 +8,14 @@ import { AbstractMessageDto } from '@libs/messaging/dto/abstract-message.dto';
  * RxMessage Class
  */
 export class RxMessage extends AbstractMessageDto {
-  public content: string;
+  public message: string;
   public fields: any;
   public properties: any;
   public channel: RxChannel /*| RxConfirmChannel */;
 
   toRaw(): Message {
     return {
-      content: Buffer.from(this.content),
+      content: Buffer.from(this.message),
       fields: this.fields,
       properties: this.properties,
     };
@@ -28,7 +28,7 @@ export class RxMessage extends AbstractMessageDto {
    */
   constructor(message: Message, channel?: RxChannel /*| RxConfirmChannel */) {
     super();
-    this.content = message.content?.toString('utf8');
+    this.message = JSON.parse(message.content?.toString('utf8'));
     this.fields = message.fields;
     this.properties = message.properties;
     this.channel = channel;

@@ -9,7 +9,7 @@ import {
   ExternalContextCreator,
   ParamsFactory,
 } from '@nestjs/core/helpers/external-context-creator';
-import { groupBy, isObject } from 'lodash';
+import { groupBy } from 'lodash';
 import {
   INCOMMING_METADATA_KEY,
   MESSAGING_ARGS_METADATA_KEY,
@@ -22,12 +22,17 @@ import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-conne
 import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discovery.interfaces';
 import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
 import { IncomingChannelDto } from '@libs/messaging/dto/incomming-channel.dto';
+import { MessagingParamtype } from '@libs/messaging/decorators/message.decorator';
 
 export class MessagingParamsFactory implements ParamsFactory {
   exchangeKeyForValue(type: number, data: ParamData, args: any): any {
-    console.log('Messaging debug', type, data, args);
-
-    return data && !isObject(data) ? args[0]?.[data as string] : args[0];
+    switch (type) {
+      case MessagingParamtype.MESSAGE:
+      case MessagingParamtype.INCOMING_CONFIGURATION:
+        return args[type];
+      default:
+        return null;
+    }
   }
 }
 
@@ -70,10 +75,16 @@ export class MessagingInstaller implements OnApplicationBootstrap {
     discoveredMethod,
     meta,
   }: DiscoveredMethodWithMeta<any>) {
-    return this.externalContextCreator.create(
-      discoveredMethod.parentClass.instance,
-      discoveredMethod.handler,
-      discoveredMethod.methodName,
+    const { methodName, parentClass } = discoveredMethod;
+    const cacheKey = `${parentClass.name}.${methodName}`;
+
+    const proxy = function (...args) {
+      return parentClass.instance[methodName].call(this, ...args);
+    };
+    const handler = this.externalContextCreator.create(
+      parentClass.instance,
+      proxy.bind(parentClass.instance),
+      methodName,
       MESSAGING_ARGS_METADATA_KEY,
       this.paramsFactory,
       undefined,
@@ -81,6 +92,7 @@ export class MessagingInstaller implements OnApplicationBootstrap {
       undefined,
       'messaging',
     );
+    return handler;
   }
 
   public async onApplicationBootstrap() {
@@ -115,8 +127,8 @@ export class MessagingInstaller implements OnApplicationBootstrap {
             event: config.event,
           });
 
-          const decoratedMethod = function (...args) {
-            const payload = handler.call(instance, ...args);
+          const decoratedMethod = async function (...args) {
+            const payload = await handler.call(instance, ...args);
             dto.publicator$.next(payload);
             return payload;
           };

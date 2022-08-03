@@ -10,7 +10,7 @@ import {
   Subscription,
   tap,
 } from 'rxjs';
-import RxConnection from './RxConnection';
+import RxConnection from './connection.rx';
 import { ConsumerConfig, Kafka, KafkaConfig, ProducerConfig } from 'kafkajs';
 
 /**

@@ -114,6 +114,6 @@ export class AppController {
    */
   @Get()
   getHealth() {
-    return this.appService.getHello5('asdasd');
+    return this.appService.getHello();
   }
 }

@@ -32,7 +32,6 @@ export class FlinkParamsFactory implements ParamsFactory {
       default:
         return null;
     }
-    console.log('Flink debug', type, data, args);
   }
 }
 

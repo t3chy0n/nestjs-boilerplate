@@ -1,20 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Outgoing } from '@libs/messaging/decorators/outgoing.decorator';
 import { Incoming } from '@libs/messaging/decorators/incoming.decorator';
 import {
-  Connection,
+  IncomingConfiguration,
   Message,
 } from '@libs/messaging/decorators/message.decorator';
+import { IsNumber, Min } from 'class-validator';
+
+export class TestDto {
+  // @IsNumber()
+  // @Min(0)
+  challengeAmount: number;
+}
 
 export class Payload {
   content: string;
 }
 
 @Injectable()
+// @UsePipes(new ValidationPipe({ transform: true }))
 export class AppService {
   @Outgoing('test_outgoing_message')
-  getHello(msg: Payload): string {
-    return 'Hello World!';
+  async getHello(): Promise<any> {
+    return {
+      challengeAmount: 1,
+      challengeAmounts: 1,
+    };
   }
 
   @Outgoing('test_outgoing_kafka_message')
@@ -28,15 +39,26 @@ export class AppService {
     return 'Hello World kafka!';
   }
 
-  @Outgoing('test_outgoing_message2')
   @Incoming('test_outgoing_message')
-  getHello2(@Message() msg: Payload, @Connection() msg2: Payload): string {
+  @Outgoing('test_outgoing_message2')
+  getHello2(
+    @Message() msg: TestDto,
+    @IncomingConfiguration() msg2: Payload,
+  ): any {
+    return {};
+  }
+
+  @Incoming('test_outgoing_message2')
+  test(@Message() msg: any, @IncomingConfiguration() msg2: Payload): string {
     return 'Hello World!';
   }
 
-  @Outgoing('test_outgoing_message4')
   @Incoming('test_outgoing_message5')
-  getHello4(@Message() msg: Payload, @Connection() msg2: Payload): string {
+  @Outgoing('test_outgoing_message4')
+  getHello4(
+    @Message() msg: Payload,
+    @IncomingConfiguration() msg2: Payload,
+  ): string {
     console.log('Received message');
     return 'Hello World!';
   }

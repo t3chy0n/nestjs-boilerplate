@@ -8,13 +8,16 @@ config-server:
 
 messaging:
   connections:
+    memory:
+      - name: default
+
     rabbitmq:
       - name: default
         protocol: 'amqp'
         port: 5672
         username: 'user'
         password: 'bitnami'
-        host: 'amqp://localhost'
+        hostname: 'localhost'
     kafka:
       - name: default
         brokers:
@@ -76,6 +79,20 @@ messaging:
         name: 'test_exchange'
         type: 'topic'
 
+    test_outgoing_message2:
+      driver: rabbitmq
+      routingKeys:
+        - routing.key2
+
+      queue:
+        name: 'test_outgoing_message2'
+      exchange:
+        name: 'test_exchange'
+        type: 'topic'
+
+    test_outgoing_message5:
+      driver: memory
+
     test_outgoing_kafka_message:
       driver: kafka
       topic: "kafka-topic"
@@ -93,6 +110,12 @@ messaging:
     test_outgoing_kafka_message:
       driver: kafka
       topic: "kafka-topic"
+
+    test_outgoing_message4:
+      driver: memory
+
+    test_outgoing_message5:
+      driver: memory
 
 #    test.outgoing.message2:
 #      driver: kafka

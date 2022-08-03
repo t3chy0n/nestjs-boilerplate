@@ -26,7 +26,6 @@ import { ILogger } from '@libs/logger/logger.interface';
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 import { catchError } from 'rxjs/operators';
 import { Injectable } from '@nestjs/common';
-import { Payload } from '@app/app.service';
 
 @Injectable()
 export class RabbitmqConnection implements IMessagingConnection {
@@ -77,11 +76,13 @@ export class RabbitmqConnection implements IMessagingConnection {
         }),
       ),
 
-      mergeMap((reply) =>
-        reply.channel.bindQueue(
-          incoming.queue,
-          incoming.exchange,
-          incoming.routingKey,
+      tap((reply) =>
+        incoming.routingKeys.map((routingKey) =>
+          reply.channel.bindQueue(
+            incoming.queue,
+            incoming.exchange,
+            routingKey,
+          ),
         ),
       ),
 
@@ -91,18 +92,14 @@ export class RabbitmqConnection implements IMessagingConnection {
         }),
       ),
 
-      tap((message) => {
+      tap((rxMessage) => {
         if (!incoming.callback) {
           return;
         }
-        const p = new Payload();
-        p.content = message.content;
         incoming.callback(
           new IncomingChannelDto(),
-          {
-            content: message.content,
-          },
-          p,
+          rxMessage,
+          rxMessage.message,
         );
       }),
     );
@@ -150,6 +147,7 @@ export class RabbitmqConnection implements IMessagingConnection {
       return throwError(err);
     });
   }
+
   initialize() {
     this.subscription = this.connection$
       .pipe(

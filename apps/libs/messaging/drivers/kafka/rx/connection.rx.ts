@@ -1,7 +1,7 @@
 import { ConsumerConfig, Kafka, Partitioners, ProducerConfig } from 'kafkajs';
-import RxConsumer from '@libs/messaging/drivers/kafka/rx/RxConsumer';
-import { RxProducer } from '@libs/messaging/drivers/kafka/rx/RxProducer';
-import { RxAdmin } from '@libs/messaging/drivers/kafka/rx/RxAdmin';
+import RxConsumer from '@libs/messaging/drivers/kafka/rx/consumer.rx';
+import { RxProducer } from '@libs/messaging/drivers/kafka/rx/producer.rx';
+import { RxAdmin } from '@libs/messaging/drivers/kafka/rx/admin.rx';
 
 /**
  * Connection to Kafka server.

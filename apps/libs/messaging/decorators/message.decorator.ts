@@ -2,9 +2,8 @@ import { assignMetadata, PipeTransform, Type } from '@nestjs/common';
 import { MESSAGING_ARGS_METADATA_KEY } from '@libs/messaging/consts';
 
 export enum MessagingParamtype {
-  MESSAGE = 0,
-  PAYLOAD = 1,
-  CONNECTION = 2,
+  INCOMING_CONFIGURATION = 0,
+  MESSAGE = 2,
 }
 
 export function createMessagingParamDecorator(
@@ -30,9 +29,6 @@ export function createMessagingParamDecorator(
 export const Message = createMessagingParamDecorator(
   MessagingParamtype.MESSAGE,
 );
-export const Connection = createMessagingParamDecorator(
-  MessagingParamtype.CONNECTION,
-);
-export const Payload = createMessagingParamDecorator(
-  MessagingParamtype.PAYLOAD,
+export const IncomingConfiguration = createMessagingParamDecorator(
+  MessagingParamtype.INCOMING_CONFIGURATION,
 );

@@ -1,7 +1,7 @@
 import { Observable, Subject, Observer, from } from 'rxjs';
 import { Consumer, ConsumerSubscribeTopics } from 'kafkajs';
-import RxMessage from '@libs/messaging/drivers/kafka/rx/RxMessage';
-import RxConnection from '@libs/messaging/drivers/kafka/rx/RxConnection';
+import RxMessage from '@libs/messaging/drivers/kafka/rx/message.rx';
+import RxConnection from '@libs/messaging/drivers/kafka/rx/connection.rx';
 import { catchError, map } from 'rxjs/operators';
 import { EmptyReply } from '@libs/messaging/drivers/kafka/rx/reply/EmptyReply';
 

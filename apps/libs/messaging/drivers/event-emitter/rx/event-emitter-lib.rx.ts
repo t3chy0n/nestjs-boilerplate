@@ -9,7 +9,7 @@ import {
   Subscription,
   tap,
 } from 'rxjs';
-import { RxChannel } from '@libs/messaging/drivers/event-emitter/rx/RxChannel';
+import { RxChannel } from '@libs/messaging/drivers/event-emitter/rx/channel.rx';
 
 /**
  * Factory for RxEventEmitterLib.

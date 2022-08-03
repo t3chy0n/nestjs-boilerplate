@@ -1,13 +1,18 @@
 import { AbstractMessageDto } from '@libs/messaging/dto/abstract-message.dto';
-import { RxConsumer } from '@libs/messaging/drivers/kafka/rx/RxConsumer';
+import { RxConsumer } from '@libs/messaging/drivers/kafka/rx/consumer.rx';
 import { EachMessagePayload, KafkaMessage } from 'kafkajs';
-import { RxChannel } from '@libs/messaging/drivers/event-emitter/rx/RxChannel';
 // import RxConfirmChannel from './RxConfirmChannel';
 
 /**
  * RxMessage Class
  */
 export class RxMessage extends AbstractMessageDto {
+  public consumer: RxConsumer;
+
+  public topic: string;
+  public partition: number;
+  public message: KafkaMessage;
+
   toRaw() {
     return {};
   }
@@ -15,15 +20,14 @@ export class RxMessage extends AbstractMessageDto {
    * RxMessage constructor.
    *
    * @param message
-   * @param event
-   * @param channel
+   * @param consumer
    */
-  constructor(
-    public readonly message: any,
-    public readonly event: string,
-    public readonly channel?: RxChannel,
-  ) {
+  constructor(message: EachMessagePayload, consumer?: RxConsumer) {
     super();
+
+    this.topic = message.topic;
+    this.partition = message.partition;
+    this.message = message.message;
   }
 
   /**
@@ -32,7 +36,7 @@ export class RxMessage extends AbstractMessageDto {
    * @param allUpTo
    */
   public ack(allUpTo?: boolean): void {
-    //noop
+    // return this.channel.ack(this, allUpTo);
   }
 
   /**
@@ -41,7 +45,7 @@ export class RxMessage extends AbstractMessageDto {
    * @param requeue
    */
   public nack(requeue?: boolean): void {
-    //noop
+    // return this.channel.nack(this, false, requeue);
   }
 }
 

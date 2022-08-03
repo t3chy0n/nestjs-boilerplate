@@ -1,6 +1,6 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { fromEvent, mergeMap, Observable } from 'rxjs';
-import RxMessage from '@libs/messaging/drivers/event-emitter/rx/RxMessage';
+import RxMessage from '@libs/messaging/drivers/event-emitter/rx/message.rx';
 import { map } from 'rxjs/operators';
 
 export class RxChannel {

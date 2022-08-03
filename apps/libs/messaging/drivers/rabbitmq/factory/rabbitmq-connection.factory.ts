@@ -9,6 +9,8 @@ import { MessagingConfiguration } from '@libs/messaging/messaging.configuration'
 import { MessagingDriver } from '@libs/messaging/consts';
 import { ILazyLoaderService } from '@libs/lazy-loader/lazy-loader-service.interface';
 
+const DEFAULT_RABBITMQ_CONNECTION_TIMEOUT = 4000;
+
 @Injectable()
 export class RabbitmqConnectionFactory implements IMessagingConnectionFactory {
   constructor(
@@ -25,13 +27,9 @@ export class RabbitmqConnectionFactory implements IMessagingConnectionFactory {
       const isSSL = configData.protocol === 'amqps';
 
       const socketOptions = {
-        /***
-         * SSL on RabbitMQ on Aws behaves wierd, needs to have cert commited.
-         * TODO: Try to find a proper solution for this.
-         */
+        timeout: DEFAULT_RABBITMQ_CONNECTION_TIMEOUT,
+
         ...(isSSL && {
-          ca: [fs.readFileSync('config/rabbit-mq.pem')],
-          //TODO: We need to see how we can setup SSL properly with AMQP
           rejectUnauthorized: false,
         }),
       };

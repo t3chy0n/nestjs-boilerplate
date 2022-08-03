@@ -18,13 +18,13 @@ import {
   tap,
   throwError,
 } from 'rxjs';
-import RxConnection from '@libs/messaging/drivers/kafka/rx/RxConnection';
+import RxConnection from '@libs/messaging/drivers/kafka/rx/connection.rx';
 import { MessagingConfiguration } from '@libs/messaging/messaging.configuration';
 import { ILogger } from '@libs/logger/logger.interface';
-import RxKafkaLib from '@libs/messaging/drivers/kafka/rx/RxKafkaLib';
+import RxKafkaLib from '@libs/messaging/drivers/kafka/rx/kafka-lib.rx';
 import { catchError, map } from 'rxjs/operators';
 import { Injectable } from '@nestjs/common';
-import RxMessage from '@libs/messaging/drivers/kafka/rx/RxMessage';
+import RxMessage from '@libs/messaging/drivers/kafka/rx/message.rx';
 
 const RETRY_AFTER = 20000;
 
@@ -118,13 +118,16 @@ export class KafkaConnection implements IMessagingConnection {
   ) {
     return con$.pipe(
       filter((message) => message.topic === incoming.topic),
-      tap((message) => {
+      tap((rxMessage) => {
         if (!incoming.callback) {
           return;
         }
-        incoming.callback(new IncomingChannelDto(), {
-          content: message.message.value.toString(),
-        });
+
+        incoming.callback(
+          new IncomingChannelDto(),
+          rxMessage,
+          rxMessage.message,
+        );
       }),
     );
   }
