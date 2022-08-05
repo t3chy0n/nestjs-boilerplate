@@ -1,11 +1,11 @@
-import { Injectable, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Injectable, Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Outgoing } from '@libs/messaging/decorators/outgoing.decorator';
 import { Incoming } from '@libs/messaging/decorators/incoming.decorator';
 import {
   IncomingConfiguration,
   Message,
 } from '@libs/messaging/decorators/message.decorator';
-import { IsNumber, Min } from 'class-validator';
+import { IsDefined, IsNumber, Min } from 'class-validator';
 
 export class TestDto {
   // @IsNumber()
@@ -17,11 +17,36 @@ export class Payload {
   content: string;
 }
 
+import {
+  Config,
+  ConfigProperty,
+} from '@libs/configuration/decorators/config.decorators';
+
+class Nested {
+  a: string;
+  @IsDefined()
+  b: string;
+}
+
+@Config('test')
+export class TestConfig {
+  @ConfigProperty('inner')
+  a: string = '';
+  @ConfigProperty('inner2')
+  b: string = '';
+  @ConfigProperty('inner3')
+  c: Nested;
+}
+
 @Injectable()
 // @UsePipes(new ValidationPipe({ transform: true }))
 export class AppService {
+  constructor(private readonly config: TestConfig) {}
   @Outgoing('test_outgoing_message')
   async getHello(): Promise<any> {
+    const a = this.config.a;
+    const b = this.config.b;
+    const c = this.config.c;
     return {
       challengeAmount: 1,
       challengeAmounts: 1,
@@ -30,7 +55,8 @@ export class AppService {
 
   @Outgoing('test_outgoing_kafka_message')
   getHelloKafka(msg: Payload): string {
-    return 'Hello World kafka!';
+    const a = this.config.a;
+    return a;
   }
 
   @Incoming('test_outgoing_kafka_message')

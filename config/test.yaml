@@ -1,0 +1,6 @@
+test:
+  inner: 'http://localhost:8888s'
+  inner2: 'http://localhost:2'
+  inner3:
+    a: t
+    c: 1

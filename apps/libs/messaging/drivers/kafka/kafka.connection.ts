@@ -1,6 +1,6 @@
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 import { MessagingDriver } from '@libs/messaging/consts';
-import { IncomingChannelDto } from '@libs/messaging/dto/incomming-channel.dto';
+import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
 import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
 import {
   combineLatestAll,
@@ -33,7 +33,7 @@ export class KafkaConnection implements IMessagingConnection {
   public readonly driver: MessagingDriver = MessagingDriver.KAFKA;
   public readonly name: string;
 
-  private incoming: IncomingChannelDto[] = [];
+  private incoming: ChannelConfigurationDto[] = [];
   private outgoing: OutgoingChannelDto[] = [];
 
   private connection$: Observable<RxConnection>;
@@ -60,7 +60,7 @@ export class KafkaConnection implements IMessagingConnection {
     this.name = configData.name;
   }
 
-  addIncoming(dto: IncomingChannelDto) {
+  addIncoming(dto: ChannelConfigurationDto) {
     this.incoming.push(dto);
   }
 
@@ -114,7 +114,7 @@ export class KafkaConnection implements IMessagingConnection {
 
   handleIncomingMessages(
     con$: Observable<RxMessage>,
-    incoming: IncomingChannelDto,
+    incoming: ChannelConfigurationDto,
   ) {
     return con$.pipe(
       filter((message) => message.topic === incoming.topic),
@@ -123,11 +123,7 @@ export class KafkaConnection implements IMessagingConnection {
           return;
         }
 
-        incoming.callback(
-          new IncomingChannelDto(),
-          rxMessage,
-          rxMessage.message,
-        );
+        incoming.callback(incoming, rxMessage, rxMessage.message);
       }),
     );
   }

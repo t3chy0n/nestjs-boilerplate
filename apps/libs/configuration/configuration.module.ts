@@ -20,6 +20,7 @@ import { IConfigurationFactory } from './interfaces/configuration-factory.interf
 import { ConfigurationFactory } from './configuration.factory';
 import { BootstrapConfigurationFactory } from './bootsrap-configuration.factory';
 import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configuration-factory.interface';
+import { ConfigurationInstaller } from '@libs/configuration/installer/configuration.installer';
 
 @Global()
 @Module({
@@ -34,7 +35,7 @@ import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configura
       provide: IConfigServerConfiguration,
       useClass: ConfigServerConfiguration,
     },
-
+    ConfigurationInstaller,
     YamlDriver,
     EnvDriver,
     ConfigServerDriver,

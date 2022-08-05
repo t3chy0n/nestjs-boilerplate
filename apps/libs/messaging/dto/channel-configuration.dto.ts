@@ -1,7 +1,12 @@
 import { AbstractMessageDto } from '@libs/messaging/dto/abstract-message.dto';
 import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discovery.interfaces';
+import { Subject } from 'rxjs';
 
-export class IncomingChannelDto {
+enum ChannelDirection {
+  IN = 'in',
+  OUT = 'out',
+}
+export class ChannelConfigurationDto {
   public routingKeys: string[] = [];
   public topic: string;
   public event: string;
@@ -11,16 +16,20 @@ export class IncomingChannelDto {
   public routingKey: string;
   public queueDurable = false;
   public acknowledgements = true;
+  public direction: ChannelDirection;
+
   public callback = (...args: any[]) => {};
 
-  constructor(params: Partial<IncomingChannelDto> = {}) {
+  public publicator$: Subject<any> = new Subject<any>();
+
+  constructor(params: Partial<ChannelConfigurationDto> = {}) {
     Object.assign(this, params);
   }
 
   static toDto(discoveredMethod: DiscoveredMethodWithMeta<any>, config: any) {
     const { meta } = discoveredMethod;
 
-    return new IncomingChannelDto({
+    return new ChannelConfigurationDto({
       queue: config.queue?.name,
       exchange: config.exchange?.name,
       exchangeType: config.exchange?.type,

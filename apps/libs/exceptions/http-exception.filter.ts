@@ -26,10 +26,12 @@ export class HttpExceptionFilter implements IHttpExceptionFilter {
 
       const res = exception.getResponse();
 
+      this.logger.error(`Error ${typeof exception}: ${JSON.stringify(res)}`);
+
       response?.status(status).json({
         status: exception.getStatus(),
         message: exception.message,
-        ...(typeof res === 'object' ? res : {}),
+        ...(typeof res === 'object' ? res : { message: res }),
       });
       return;
     }

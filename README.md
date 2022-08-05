@@ -69,6 +69,10 @@ $ docker-compose up
 $ yarn start:prod
 ```
 
+## Configuration decorated classes.
+In order to properly make a use of config classes, which are using dedicated decorators
+tsconfig option `useDefineForClassFields` has to be present.
+
 ## Database utilities
 ```bash
 # Shows changes in db compares currently build entities with db state

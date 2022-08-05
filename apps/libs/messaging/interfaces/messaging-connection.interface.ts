@@ -1,4 +1,4 @@
-import { IncomingChannelDto } from '@libs/messaging/dto/incomming-channel.dto';
+import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
 import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
 
 export abstract class IMessagingConnection {
@@ -6,7 +6,7 @@ export abstract class IMessagingConnection {
   public readonly driver: string;
 
   abstract initialize();
-  abstract addIncoming(dto: IncomingChannelDto);
+  abstract addIncoming(dto: ChannelConfigurationDto);
 
   abstract addOutgoing(dto: OutgoingChannelDto);
 }

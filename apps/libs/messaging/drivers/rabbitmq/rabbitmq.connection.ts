@@ -19,7 +19,7 @@ import {
   RxChannel,
 } from '@libs/messaging/drivers/rabbitmq/rx';
 import { MessagingDriver } from '@libs/messaging/consts';
-import { IncomingChannelDto } from '@libs/messaging/dto/incomming-channel.dto';
+import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
 import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
 import { MessagingConfiguration } from '@libs/messaging/messaging.configuration';
 import { ILogger } from '@libs/logger/logger.interface';
@@ -32,7 +32,7 @@ export class RabbitmqConnection implements IMessagingConnection {
   public readonly driver: MessagingDriver = MessagingDriver.RABBITMQ;
   public readonly name: string;
 
-  private incoming: IncomingChannelDto[] = [];
+  private incoming: ChannelConfigurationDto[] = [];
   private outgoing: OutgoingChannelDto[] = [];
 
   private connection$: Observable<RxChannel>;
@@ -54,7 +54,7 @@ export class RabbitmqConnection implements IMessagingConnection {
     this.name = configData.name;
   }
 
-  addIncoming(dto: IncomingChannelDto) {
+  addIncoming(dto: ChannelConfigurationDto) {
     this.incoming.push(dto);
   }
 
@@ -64,7 +64,7 @@ export class RabbitmqConnection implements IMessagingConnection {
 
   handleIncomingMessages(
     channel$: Observable<RxChannel>,
-    incoming: IncomingChannelDto,
+    incoming: ChannelConfigurationDto,
   ) {
     return channel$.pipe(
       mergeMap((channel) =>
@@ -96,11 +96,7 @@ export class RabbitmqConnection implements IMessagingConnection {
         if (!incoming.callback) {
           return;
         }
-        incoming.callback(
-          new IncomingChannelDto(),
-          rxMessage,
-          rxMessage.message,
-        );
+        incoming.callback(incoming, rxMessage, rxMessage.message);
       }),
     );
   }

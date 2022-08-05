@@ -67,7 +67,9 @@ services:
       - --advertise-kafka-addr
       - PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
     # NOTE: Please use the latest version here!
-    image: vectorized/redpanda:latest
+    build:
+      dockerfile: redpanda.Dockerfile
+      context: ./docker
     container_name: redpanda-1
     networks:
       - intranet
@@ -78,35 +80,35 @@ services:
   ###############################################################
   #    StateFun runtime
   ###############################################################
-
-  statefun-manager:
-    image: apache/flink-statefun:3.2.0
-    expose:
-      - "6123"
-    ports:
-      - "8082:8081"
-    environment:
-      ROLE: master
-      MASTER_HOST: statefun-manager
-    networks:
-      - intranet
-    volumes:
-      - ./module.yaml:/opt/statefun/modules/workshop/module.yaml
-      - ./flink:/opt/flink/conf
-
-  statefun-worker:
-    image: apache/flink-statefun:3.2.0
-    expose:
-      - "6121"
-      - "6122"
-    networks:
-      - intranet
-    environment:
-      ROLE: worker
-      MASTER_HOST: statefun-manager
-    volumes:
-      - ./module.yaml:/opt/statefun/modules/workshop/module.yaml
-      - ./flink:/opt/flink/conf
+#
+#  statefun-manager:
+#    image: apache/flink-statefun:3.2.0
+#    expose:
+#      - "6123"
+#    ports:
+#      - "8082:8081"
+#    environment:
+#      ROLE: master
+#      MASTER_HOST: statefun-manager
+#    networks:
+#      - intranet
+#    volumes:
+#      - ./module.yaml:/opt/statefun/modules/workshop/module.yaml
+#      - ./flink:/opt/flink/conf
+#
+#  statefun-worker:
+#    image: apache/flink-statefun:3.2.0
+#    expose:
+#      - "6121"
+#      - "6122"
+#    networks:
+#      - intranet
+#    environment:
+#      ROLE: worker
+#      MASTER_HOST: statefun-manager
+#    volumes:
+#      - ./module.yaml:/opt/statefun/modules/workshop/module.yaml
+#      - ./flink:/opt/flink/conf
 
 #  app:
 #    build:

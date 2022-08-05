@@ -21,14 +21,14 @@ import { ILogger } from '@libs/logger/logger.interface';
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discovery.interfaces';
 import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
-import { IncomingChannelDto } from '@libs/messaging/dto/incomming-channel.dto';
-import { MessagingParamtype } from '@libs/messaging/decorators/message.decorator';
+import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
+import { MessagingParamType } from '@libs/messaging/decorators/message.decorator';
 
 export class MessagingParamsFactory implements ParamsFactory {
   exchangeKeyForValue(type: number, data: ParamData, args: any): any {
     switch (type) {
-      case MessagingParamtype.MESSAGE:
-      case MessagingParamtype.INCOMING_CONFIGURATION:
+      case MessagingParamType.MESSAGE:
+      case MessagingParamType.INCOMING_CONFIGURATION:
         return args[type];
       default:
         return null;
@@ -39,6 +39,7 @@ export class MessagingParamsFactory implements ParamsFactory {
 @Injectable()
 export class MessagingInstaller implements OnApplicationBootstrap {
   private static bootstrapped = false;
+  private cachedHandlers = {};
 
   constructor(
     @Inject('MESSAGING_CONNECTIONS')
@@ -78,12 +79,18 @@ export class MessagingInstaller implements OnApplicationBootstrap {
     const { methodName, parentClass } = discoveredMethod;
     const cacheKey = `${parentClass.name}.${methodName}`;
 
+    const cachedHandler = this.cachedHandlers[cacheKey];
+    if (cachedHandler) {
+      return cachedHandler;
+    }
+
     const proxy = function (...args) {
       return parentClass.instance[methodName].call(this, ...args);
     };
     const handler = this.externalContextCreator.create(
       parentClass.instance,
-      proxy.bind(parentClass.instance),
+      // proxy.bind(parentClass.instance),
+      discoveredMethod.handler,
       methodName,
       MESSAGING_ARGS_METADATA_KEY,
       this.paramsFactory,
@@ -92,6 +99,7 @@ export class MessagingInstaller implements OnApplicationBootstrap {
       undefined,
       'messaging',
     );
+    this.cachedHandlers[cacheKey] = handler;
     return handler;
   }
 
@@ -121,17 +129,19 @@ export class MessagingInstaller implements OnApplicationBootstrap {
           const connections: any = this.config.getConnectionsConfigurations(
             channelConfig.driver,
           );
-          const handler = this.createHandler(method);
           const dto = OutgoingChannelDto.toDto(method, {
             ...channelConfig,
             event: config.event,
           });
 
+          const originalMethod = discoveredMethod.handler;
           const decoratedMethod = async function (...args) {
-            const payload = await handler.call(instance, ...args);
+            const payload = await originalMethod.call(instance, ...args);
             dto.publicator$.next(payload);
             return payload;
           };
+          discoveredMethod.handler = decoratedMethod;
+          const handler = this.createHandler(method);
 
           const matchingConnections = this.connections.filter(
             (conn) => conn.driver === channelConfig.driver,
@@ -143,7 +153,7 @@ export class MessagingInstaller implements OnApplicationBootstrap {
           this.logger.log(
             `Messaging function ${targetName}.${methodName} found`,
           );
-          instance[methodName] = decoratedMethod.bind(instance);
+          instance[methodName] = handler.bind(instance);
         }),
       );
     }
@@ -166,7 +176,7 @@ export class MessagingInstaller implements OnApplicationBootstrap {
             channelConfig.driver,
           );
           const handler = this.createHandler(method);
-          const dto = IncomingChannelDto.toDto(method, {
+          const dto = ChannelConfigurationDto.toDto(method, {
             ...channelConfig,
             event: config.event,
           });

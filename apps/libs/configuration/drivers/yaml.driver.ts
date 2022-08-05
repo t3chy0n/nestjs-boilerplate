@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as yaml from 'yaml';
 import { BaseDriver } from './base.driver';
 import { IExceptionMapper } from '../../exceptions/interfaces/exception-mapper.interface';
-
-const YAML_CONFIG_FILE = './config/application.yaml';
+import { getFiles } from '@libs/utils/get-files';
+import * as _ from 'lodash';
 
 /***
  * Driver to fetch configuration from environment variables
@@ -21,8 +21,14 @@ export class YamlDriver extends BaseDriver {
    */
   getConfig() {
     try {
-      const file = fs.readFileSync(YAML_CONFIG_FILE, 'utf8');
-      return yaml.parse(file);
+      const files = [...getFiles('./config')];
+      const yamlConfigs = files.filter((f) => f.endsWith('.yaml'));
+
+      const parsed = yamlConfigs.map((yamlConfigPath) => {
+        const file = fs.readFileSync(yamlConfigPath, 'utf8');
+        return yaml.parse(file);
+      });
+      return _.merge({}, ...parsed);
     } catch (err) {
       this.exceptions.map(err);
     }

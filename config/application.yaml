@@ -104,7 +104,7 @@ messaging:
       routingKey: routing.key1
     test_outgoing_message2:
       driver: rabbitmq
-      exchange: 'test_exchange2'
+      exchange: 'test_exchange'
       routingKey: routing.key2
 
     test_outgoing_kafka_message:

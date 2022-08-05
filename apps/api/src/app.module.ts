@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppService, TestConfig } from './app.service';
 import { DbModule } from '@db/db.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgresDBConfigurationFactory } from '@db/factory/postgres-db-config.factory';
@@ -50,6 +50,11 @@ if (process.env.NODE_ENV !== 'production') {
 @Module({
   imports: modules,
   controllers: [AppController],
-  providers: [AppService, RequestScopedValidationPipe, TradesService],
+  providers: [
+    AppService,
+    RequestScopedValidationPipe,
+    TradesService,
+    TestConfig,
+  ],
 })
 export class AppModule {}

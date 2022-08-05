@@ -1,5 +1,5 @@
 import { MessagingDriver } from '@libs/messaging/consts';
-import { IncomingChannelDto } from '@libs/messaging/dto/incomming-channel.dto';
+import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
 import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
 import {
   combineLatestAll,
@@ -32,7 +32,7 @@ export class EventEmitterConnection implements IMessagingConnection {
   public readonly driver: MessagingDriver = MessagingDriver.MEMORY;
   public readonly name: string;
 
-  private incoming: IncomingChannelDto[] = [];
+  private incoming: ChannelConfigurationDto[] = [];
   private outgoing: OutgoingChannelDto[] = [];
 
   private channel$: Observable<RxChannel>;
@@ -48,7 +48,7 @@ export class EventEmitterConnection implements IMessagingConnection {
     );
   }
 
-  addIncoming(dto: IncomingChannelDto) {
+  addIncoming(dto: ChannelConfigurationDto) {
     this.incoming.push(dto);
   }
 
@@ -94,7 +94,7 @@ export class EventEmitterConnection implements IMessagingConnection {
 
   handleIncomingMessages(
     con$: Observable<RxChannel>,
-    incoming: IncomingChannelDto,
+    incoming: ChannelConfigurationDto,
   ) {
     return con$.pipe(
       mergeMap((channel) => channel.subscribe(incoming.event)),
@@ -103,11 +103,7 @@ export class EventEmitterConnection implements IMessagingConnection {
         if (!incoming.callback) {
           return;
         }
-        incoming.callback(
-          new IncomingChannelDto(),
-          rxMessage,
-          rxMessage.message,
-        );
+        incoming.callback(incoming, rxMessage, rxMessage.message);
       }),
     );
   }
