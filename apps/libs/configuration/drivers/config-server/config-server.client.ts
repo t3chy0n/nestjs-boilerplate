@@ -2,7 +2,6 @@ import { HttpService } from '@nestjs/axios';
 import { IConfigServerConfiguration } from './config-server.interfaces';
 import { Injectable, Logger } from '@nestjs/common';
 import { combineLatestAll, delay, map, retryWhen, scan } from 'rxjs/operators';
-import * as yaml from 'yaml';
 import { ConfigServerConnectionErrorException } from '../../exceptions/config-server-connection-error.exception';
 import { combineLatest, firstValueFrom, lastValueFrom, of } from 'rxjs';
 import * as _ from 'lodash';

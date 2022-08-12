@@ -5,7 +5,7 @@ import {
   IncomingConfiguration,
   Message,
 } from '@libs/messaging/decorators/message.decorator';
-import { IsDefined, IsNumber, Min } from 'class-validator';
+import { IsDefined, ValidateNested } from 'class-validator';
 
 export class TestDto {
   // @IsNumber()
@@ -21,11 +21,24 @@ import {
   Config,
   ConfigProperty,
 } from '@libs/configuration/decorators/config.decorators';
+import { Type } from 'class-transformer';
 
+class Inner {
+  @IsDefined()
+  a: string;
+  @IsDefined()
+  b: string;
+}
 class Nested {
   a: string;
   @IsDefined()
   b: string;
+  @Type(() => Inner)
+  @ValidateNested({ each: true })
+  arr: Inner[];
+  @Type(() => Inner)
+  @ValidateNested({ each: true })
+  arr2: Map<string, Inner>;
 }
 
 @Config('test')

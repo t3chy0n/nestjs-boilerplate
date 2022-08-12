@@ -3,4 +3,16 @@ test:
   inner2: 'http://localhost:2'
   inner3:
     a: t
-    c: 1
+    b: 1
+    arr:
+      - a: t
+        b: 1
+      - a: t
+        b: t
+    arr2:
+      rec1:
+        a: t
+        b: 1
+      rec2:
+        a: t
+        b: t

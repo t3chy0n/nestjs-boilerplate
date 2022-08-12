@@ -3,12 +3,17 @@
 ########################################
 FROM node:16 as builder
 
-COPY ./ /tmp/application
+#Until package json, or yarn lock are not cached, we can benefit from docker layers caching. No new npm install needed
+COPY ./package.json /tmp/application/
+COPY ./yarn.lock /tmp/application/
 
 WORKDIR /tmp/application
 
-RUN yarn install --frozen-lockfile && yarn build
+RUN yarn install --frozen-lockfile
 
+#Now we can build application
+COPY ./ /tmp/application
+RUN yarn build
 RUN git config --global user.email "test@test.com" && git config --global user.name "No One" && git init . && touch .gitignore && git add .gitignore && git commit -m 'initialize repository'
 
 ENTRYPOINT ["bash"]
