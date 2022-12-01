@@ -5,6 +5,7 @@ import { combineLatestAll, delay, map, retryWhen, scan } from 'rxjs/operators';
 import { ConfigServerConnectionErrorException } from '../../exceptions/config-server-connection-error.exception';
 import { combineLatest, firstValueFrom, lastValueFrom, of } from 'rxjs';
 import * as _ from 'lodash';
+import * as yaml from 'yaml';
 
 @Injectable()
 export class ConfigServerClient {
@@ -55,7 +56,7 @@ export class ConfigServerClient {
       const res$ = of(
         ...urls.map((url) =>
           this.httpClient.get(url, { timeout: 3000 }).pipe(
-            map((response) => response.data),
+            map((response) => yaml.parse(response.data)),
             this.retry(),
           ),
         ),

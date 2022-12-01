@@ -24,6 +24,49 @@ import { IConfigurationFactory } from './interfaces/configuration-factory.interf
 import { ConfigurationFactory } from './configuration.factory';
 import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configuration-factory.interface';
 import { BootstrapConfigurationFactory } from './bootsrap-configuration.factory';
+import { IsDefined, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  BootstrapConfig,
+  Config,
+  ConfigProperty,
+} from '@libs/configuration/decorators/config.decorators';
+import { ConfigurationInstaller } from '@libs/configuration/installer/configuration.installer';
+import { DiscoveryModule } from '@golevelup/nestjs-discovery';
+
+class Inner {
+  @IsDefined()
+  a: string;
+  @IsDefined()
+  b: string;
+}
+class Nested {
+  a: string;
+  @IsDefined()
+  b: string;
+  @Type(() => Inner)
+  @ValidateNested({ each: true })
+  arr: Inner[];
+  @Type(() => Inner)
+  @ValidateNested({ each: true })
+  arr2: Map<string, Inner>;
+}
+
+@BootstrapConfig()
+export class BootstrapTestConfig {
+  @ConfigProperty()
+  fromServer: boolean = false;
+  @ConfigProperty('fromYaml')
+  fromYaml: boolean = false;
+}
+
+@Config()
+export class TestConfig {
+  @ConfigProperty('fromServer')
+  fromServer: boolean = false;
+  @ConfigProperty('fromYaml')
+  fromYaml: boolean = false;
+}
 
 describe('Configuration Drivers', () => {
   let http: HttpService;
@@ -38,6 +81,9 @@ describe('Configuration Drivers', () => {
   let configServerDriver: ConfigServerDriver;
 
   const originalEnv = process.env;
+
+  let bootstrapTestConfig: BootstrapTestConfig;
+  let testConfig: BootstrapTestConfig;
 
   const configServerYaml = `
   config-server:
@@ -77,11 +123,13 @@ describe('Configuration Drivers', () => {
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule],
+      imports: [HttpModule, DiscoveryModule],
       providers: [
         YamlDriver,
         EnvDriver,
         ConfigServerDriver,
+        BootstrapTestConfig,
+        TestConfig,
         {
           provide: 'RUNTIME_CONFIG_DRIVERS',
           useFactory: (...drivers) => drivers,
@@ -125,6 +173,7 @@ describe('Configuration Drivers', () => {
           useFactory: async (factory) => await factory.create(),
           inject: [IConfigurationFactory],
         },
+        ConfigurationInstaller,
       ],
     }).compile();
 
@@ -149,6 +198,10 @@ describe('Configuration Drivers', () => {
     clientConfig = app.get<IConfigServerConfiguration>(
       IConfigServerConfiguration,
     );
+
+    testConfig = app.get<TestConfig>(TestConfig);
+    bootstrapTestConfig = app.get<BootstrapTestConfig>(BootstrapTestConfig);
+
     jest.spyOn(clientConfig, 'isEnabled').mockReturnValue(true);
     jest.spyOn(client, 'fetchConfiguration');
 
@@ -236,6 +289,17 @@ describe('Configuration Drivers', () => {
     it('should resolve configurations when parent node is shared between drivers', async () => {
       expect(config.get('db.runMigrations')).toEqual(true);
       expect(config.get('db.host')).toEqual('TestDbHost');
+    });
+  });
+
+  describe('Test configuration assembled through deorators', () => {
+    it('should use bootstrap drivers when decorated with @BootstrapConfig', async () => {
+      expect(bootstrapTestConfig.fromServer).toEqual(false);
+      expect(bootstrapTestConfig.fromYaml).toEqual(true);
+    });
+    it('should use all drivers when decorated with @Config', async () => {
+      expect(testConfig.fromServer).toEqual(true);
+      expect(testConfig.fromYaml).toEqual(true);
     });
   });
 });

@@ -9,9 +9,19 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 
-export function Config(key: string) {
-  return applyDecorators(SetMetadata(CONFIGURATION_MAIN_KEY_METADATA, { key }));
+export function Config(key = '', bootstrap = false) {
+  return applyDecorators(
+    SetMetadata(CONFIGURATION_MAIN_KEY_METADATA, { key, bootstrap }),
+  );
 }
 
-export const ConfigProperty = (key: string) =>
-  createPropertyDecorator(CONFIGURATION_KEY_METADATA, { key }, false);
+export function BootstrapConfig(key = '') {
+  return Config(key, true);
+}
+
+export const ConfigProperty = (key = '', bootstrap = false) =>
+  createPropertyDecorator(
+    CONFIGURATION_KEY_METADATA,
+    { key, bootstrap },
+    false,
+  );
