@@ -1,4 +1,4 @@
-import { Injectable, Logger, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Logger, Provider, UsePipes, ValidationPipe } from '@nestjs/common';
 import { Outgoing } from '@libs/messaging/decorators/outgoing.decorator';
 import { Incoming } from '@libs/messaging/decorators/incoming.decorator';
 import {
@@ -22,6 +22,10 @@ import {
   ConfigProperty,
 } from '@libs/configuration/decorators/config.decorators';
 import { Type } from 'class-transformer';
+import { MODULE_METADATA } from '@nestjs/common/constants';
+import { ConfigurationModule } from '@libs/configuration/configuration.module';
+
+import {Injectable} from "@libs/discovery/decorators/injectable.decorator";
 
 class Inner {
   @IsDefined()
@@ -44,9 +48,9 @@ class Nested {
 @Config('test')
 export class TestConfig {
   @ConfigProperty('inner')
-  a: string = '';
+  a = '';
   @ConfigProperty('inner2')
-  b: string = '';
+  b = '';
   @ConfigProperty('inner3')
   c: Nested;
 }
@@ -54,15 +58,27 @@ export class TestConfig {
 @Injectable()
 // @UsePipes(new ValidationPipe({ transform: true }))
 export class AppService {
-  constructor(private readonly config: TestConfig) {}
+  constructor(private readonly config: TestConfig) {
+    const providers: Provider[] = Reflect.getMetadata(
+      MODULE_METADATA.PROVIDERS,
+      ConfigurationModule,
+    );
+    const ex: Provider[] = Reflect.getMetadata(
+      MODULE_METADATA.EXPORTS,
+      ConfigurationModule,
+    );
+    console.log('Config');
+  }
   @Outgoing('test_outgoing_message')
   async getHello(): Promise<any> {
     const a = this.config.a;
     const b = this.config.b;
     const c = this.config.c;
+    console.log('Configs', a, b, c);
     return {
-      challengeAmount: 1,
-      challengeAmounts: 1,
+      a,
+      b,
+      c,
     };
   }
 

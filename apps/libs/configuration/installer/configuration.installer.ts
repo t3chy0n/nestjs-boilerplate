@@ -1,5 +1,10 @@
 import { DiscoveryService } from '@golevelup/nestjs-discovery';
-import { OnApplicationBootstrap, Injectable, Optional } from '@nestjs/common';
+import {
+  OnApplicationBootstrap,
+  Injectable,
+  Optional,
+  Logger,
+} from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import { groupBy } from 'lodash';
@@ -14,18 +19,21 @@ import {
 } from '@libs/configuration/decorators/config.decorators';
 
 import { ConfigValueWrongTypeException } from '@libs/configuration/exceptions/config-value-wrong-type.exception';
+import { OnModuleInit } from '@nestjs/common/interfaces/hooks/on-init.interface';
 
 @Injectable()
-export class ConfigurationInstaller implements OnApplicationBootstrap {
+export class ConfigurationInstaller {
   private static bootstrapped = false;
+  private readonly logger: Logger = new Logger(ConfigurationInstaller.name);
 
   constructor(
-    @Optional() private readonly logger: ILogger,
     private readonly discover: DiscoveryService,
     private readonly bootstrapConfig: IBootstrapConfiguration,
     private readonly config: IConfiguration,
   ) {}
-
+  onModuleInit() {
+    // this.initialize();
+  }
   public async providersFinder(metadataKey: string) {
     this.logger?.log('Initializing Configuration provider classes Handlers');
 
@@ -36,9 +44,11 @@ export class ConfigurationInstaller implements OnApplicationBootstrap {
     return groupBy(providers, (x) => x.discoveredClass.name);
   }
 
-  public async onApplicationBootstrap() {
+  public async initialize(): Promise<void> {
+    if (ConfigurationInstaller.bootstrapped) {
+      return;
+    }
     ConfigurationInstaller.bootstrapped = true;
-
     this.logger?.log('Initializing Configuration providers');
 
     const providers =
@@ -51,7 +61,7 @@ export class ConfigurationInstaller implements OnApplicationBootstrap {
 
   private installConfigurationClass(provider) {
     provider.map((classMeta) => {
-      const { discoveredClass, meta: config } = classMeta;
+      const { discoveredClass, meta: config, name } = classMeta;
       const { targetName, methodName, specs } = config;
 
       for (const field of Object.keys(discoveredClass.instance)) {
@@ -63,7 +73,9 @@ export class ConfigurationInstaller implements OnApplicationBootstrap {
 
         Object.defineProperty(discoveredClass.instance, field, descriptor);
       }
-      this.logger?.log(`Config function ${targetName}.${methodName} found`);
+      this.logger?.log(
+        `Config function ${targetName ?? name} ${methodName ?? ''} found`,
+      );
     });
   }
 
@@ -80,7 +92,9 @@ export class ConfigurationInstaller implements OnApplicationBootstrap {
 
     const composedConfigKey = config.key
       ? `${config.key}.${fieldMeta.key}`
-      : fieldMeta.key;
+      : fieldMeta.key != ''
+      ? fieldMeta.key
+      : field;
 
     const oldValue = discoveredClass.instance[field];
     const descriptor = {

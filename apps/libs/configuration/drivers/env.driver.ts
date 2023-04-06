@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import {ConsoleLogger, Injectable} from '@nestjs/common';
 import { set } from 'lodash';
 import 'dotenv/config';
 import { BaseDriver } from './base.driver';
@@ -11,6 +11,9 @@ const APPLICATION_ENV_VARIABLE_PREFIX = 'app_';
  */
 @Injectable()
 export class EnvDriver extends BaseDriver {
+
+  private logger = new ConsoleLogger(EnvDriver.name);
+
   constructor() {
     super();
   }
@@ -24,6 +27,8 @@ export class EnvDriver extends BaseDriver {
    * Maps all environment variables to json object. It transforms _ to . in order to prepare path string understandable for lodash
    */
   async load(): Promise<void> {
+
+
     const env = this.getEnv();
 
     const variables = Object.keys(env)
@@ -44,6 +49,7 @@ export class EnvDriver extends BaseDriver {
       }
     }
 
+    this.logger.log(`Loading ${variables.length} env variables`);
     await super.load();
   }
 }

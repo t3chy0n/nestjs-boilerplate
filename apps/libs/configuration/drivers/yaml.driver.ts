@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as yaml from 'yaml';
 import { BaseDriver } from './base.driver';
@@ -12,6 +12,8 @@ import * as _ from 'lodash';
  */
 @Injectable()
 export class YamlDriver extends BaseDriver {
+  private logger = new ConsoleLogger(YamlDriver.name);
+
   constructor(private readonly exceptions: IExceptionMapper) {
     super();
   }
@@ -36,6 +38,8 @@ export class YamlDriver extends BaseDriver {
 
   async load(): Promise<void> {
     this.config = this.getConfig();
+    this.logger.log(`Loading ${Object.values(this.config).length} yaml variables`);
+
     await super.load();
   }
 }

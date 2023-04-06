@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { OnModuleInit } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService, TestConfig } from './app.service';
 import { DbModule } from '@db/db.module';
@@ -16,6 +16,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { MessagingModule } from '@libs/messaging/messaging.module';
 import { TradesService } from '@app/trades.service';
 import { FlinkFunctionsModule } from '@libs/flink/flink-functions.installer';
+import { ConfigurationModule } from '@libs/configuration/configuration.module';
+
+import {Module} from "@libs/discovery/decorators/module.decorator";
 
 const modules = [
   DbModule,
@@ -30,6 +33,7 @@ const modules = [
   JobsModule,
   ContractsModule,
   ProfilesModule,
+  ConfigurationModule,
 ];
 
 if (process.env.NODE_ENV !== 'production') {
@@ -50,11 +54,6 @@ if (process.env.NODE_ENV !== 'production') {
 @Module({
   imports: modules,
   controllers: [AppController],
-  providers: [
-    AppService,
-    RequestScopedValidationPipe,
-    TradesService,
-    TestConfig,
-  ],
+  providers: [ RequestScopedValidationPipe ],
 })
 export class AppModule {}

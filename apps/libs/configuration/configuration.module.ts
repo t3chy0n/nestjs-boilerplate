@@ -1,4 +1,4 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
+import { DynamicModule, Global } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { EnvDriver } from './drivers/env.driver';
 import { YamlDriver } from './drivers/yaml.driver';
@@ -17,10 +17,11 @@ import {
 import { ConfigServerConfiguration } from './drivers/config-server/config-server.configuration';
 import { ConfigServerClient } from './drivers/config-server/config-server.client';
 import { IConfigurationFactory } from './interfaces/configuration-factory.interface';
-import { ConfigurationFactory } from './configuration.factory';
+import './configuration.factory';
 import { BootstrapConfigurationFactory } from './bootsrap-configuration.factory';
 import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configuration-factory.interface';
-import { ConfigurationInstaller } from '@libs/configuration/installer/configuration.installer';
+
+import {Module} from "@libs/discovery/decorators/module.decorator";
 
 @Global()
 @Module({
@@ -35,7 +36,6 @@ import { ConfigurationInstaller } from '@libs/configuration/installer/configurat
       provide: IConfigServerConfiguration,
       useClass: ConfigServerConfiguration,
     },
-    ConfigurationInstaller,
     YamlDriver,
     EnvDriver,
     ConfigServerDriver,
@@ -64,18 +64,8 @@ import { ConfigurationInstaller } from '@libs/configuration/installer/configurat
       useClass: ConfigServerClient,
     },
     {
-      provide: IConfigurationFactory,
-      useClass: ConfigurationFactory,
-    },
-    {
       provide: IBootstrapConfigurationFactory,
       useClass: BootstrapConfigurationFactory,
-    },
-    {
-      provide: IConfiguration,
-      useFactory: async (factory: IConfigurationFactory) =>
-        await factory.create(),
-      inject: [IConfigurationFactory],
     },
   ],
   exports: [IConfiguration, IBootstrapConfiguration],

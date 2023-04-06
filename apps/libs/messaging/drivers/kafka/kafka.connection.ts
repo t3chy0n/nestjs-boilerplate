@@ -148,7 +148,7 @@ export class KafkaConnection implements IMessagingConnection {
         }),
       )
       .subscribe({
-        next: (message) => this.logger.error(`subs message ${message}`),
+        next: (message) => this.logger.log(`subs message ${JSON.stringify(message, null, 2)}`),
         error: (error) => this.logger.error(`subs error ${error}`),
         complete: () => this.logger.error('pubs omplete'),
       });

@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import {
   egressMessageBuilder,
   kafkaEgressMessage,
@@ -12,6 +11,8 @@ import {
   Message,
   Storage,
 } from '@libs/flink/flink.decorators';
+
+import {Injectable} from "@libs/discovery/decorators/injectable.decorator";
 
 export class TradeDto {
   symbol: string;
