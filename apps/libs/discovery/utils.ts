@@ -12,8 +12,10 @@ import {
 import { pairs } from '@libs/iterators';
 import {
   FACTORY_USED_METHOD_NAME,
-  PROXY_MODULE_ASSOCIATION,
+  ADVICES_BELONGS_TO,
+  ADVICES_ENSURE_PARENT_IMPORTS,
 } from '@libs/discovery/const';
+import { CustomDecorator } from '@nestjs/common/decorators/core/set-metadata.decorator';
 
 type ScoredModuleAssignment = {
   module: any;
@@ -44,7 +46,7 @@ export function getDecoratorCallerPath() {
 export const moduleAutoMatch = () => {
   for (const [injectablePath, injectable] of pairs(AllInjectables)) {
     const moduleAssosiation = Reflect.getMetadata(
-      PROXY_MODULE_ASSOCIATION,
+      ADVICES_BELONGS_TO,
       injectable,
     );
 
@@ -87,6 +89,17 @@ export const moduleAutoMatch = () => {
       ],
       matchedModule,
     );
+    const parentImports: Provider[] =
+      Reflect.getMetadata(MODULE_METADATA.IMPORTS, matchedModule) || [];
+    const ensureImports: Provider[] =
+      Reflect.getMetadata(ADVICES_ENSURE_PARENT_IMPORTS, injectable) || [];
+
+    Reflect.defineMetadata(
+      MODULE_METADATA.IMPORTS,
+      [...parentImports, ...ensureImports].filter((m) => m !== matchedModule),
+      matchedModule,
+    );
+
     console.log(matchedModule);
   }
 

@@ -25,7 +25,7 @@ import { Type } from 'class-transformer';
 import { MODULE_METADATA } from '@nestjs/common/constants';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
-import {Injectable} from "@libs/discovery/decorators/injectable.decorator";
+import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
 
 class Inner {
   @IsDefined()
@@ -53,6 +53,10 @@ export class TestConfig {
   b = '';
   @ConfigProperty('inner3')
   c: Nested;
+  @ConfigProperty('inner3')
+  test() {
+    return 'asd2';
+  }
 }
 
 @Injectable()
@@ -79,6 +83,7 @@ export class AppService {
       a,
       b,
       c,
+      d: this.config.test(),
     };
   }
 
