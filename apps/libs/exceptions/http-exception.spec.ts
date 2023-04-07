@@ -12,7 +12,7 @@ describe('Http Exception', () => {
     const exception = new HttpException()
       .translation('test.SOME_KEY')
       .params(1, 2)
-      .cause(cause);
+      .setCause(cause);
 
     expect(exception.getTranslationKey()).toEqual('test.SOME_KEY');
     expect(exception.getParams()).toHaveLength(2);
@@ -22,14 +22,14 @@ describe('Http Exception', () => {
     expect(exception).toBeInstanceOf(HttpException);
   });
   it('should create exception with default translation key', () => {
-    const exception = new TestTranslatedException().cause(cause);
+    const exception = new TestTranslatedException().setCause(cause);
     expect(exception.getTranslationKey()).toEqual('error.DEFAULT');
     expect(exception.getParams()).toHaveLength(0);
     expect(exception.getCause()).toEqual(cause);
     expect(exception).toBeInstanceOf(TestTranslatedException);
   });
   it('should create exception with overriden status', () => {
-    const exception = new TestTranslatedException(HttpStatus.CONFLICT).cause(
+    const exception = new TestTranslatedException(HttpStatus.CONFLICT).setCause(
       cause,
     );
     expect(exception.getTranslationKey()).toEqual('error.DEFAULT');

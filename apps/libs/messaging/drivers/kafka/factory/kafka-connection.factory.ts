@@ -21,7 +21,7 @@ export class KafkaConnectionFactory implements IMessagingConnectionFactory {
     );
 
     const results = connections.map(async (configData: any) => {
-      return await this.lazy.create(KafkaConnection, configData);
+      return await this.lazy.resolve(KafkaConnection, configData);
     });
 
     return results;

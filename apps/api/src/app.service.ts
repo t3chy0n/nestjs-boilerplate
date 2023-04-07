@@ -26,6 +26,8 @@ import { MODULE_METADATA } from '@nestjs/common/constants';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
 import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
+import { ILazyLoaderService } from "@libs/lazy-loader/lazy-loader-service.interface";
+import { ILogger } from "@libs/logger/logger.interface";
 
 class Inner {
   @IsDefined()
@@ -47,6 +49,12 @@ class Nested {
 
 @Config('test')
 export class TestConfig {
+
+  constructor(
+    lazy: ILogger
+  ) {
+    console.log("TESTEST")
+  }
   @ConfigProperty('inner')
   a = '';
   @ConfigProperty('inner2')

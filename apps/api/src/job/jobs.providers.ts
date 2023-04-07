@@ -11,8 +11,9 @@ import { IContractsService } from '@app/contract/interfaces/contracts-service.in
 import { ContractsService } from '@app/contract/services/contracts.service';
 import { IProfilesMapper } from '@app/profile/interfaces/profiles-mapper.interface';
 import { ProfilesMapper } from '@app/profile/mappers/profiles.mapper';
+import { Provider } from '@nestjs/common';
 
-export const JobsProviders = [
+export const JobsProviders: Provider[] = [
   {
     provide: IJobsController,
     useClass: JobsController,

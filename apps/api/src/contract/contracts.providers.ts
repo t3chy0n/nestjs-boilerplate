@@ -9,8 +9,9 @@ import { ContractsDao } from './dao/contracts.dao';
 import { IProfilesService } from '@app/profile/interfaces/profiles-service.interface';
 import { ILazyLoaderService } from '@libs/lazy-loader/lazy-loader-service.interface';
 import { ProfilesService } from '@app/profile/services/profiles.service';
+import { Provider } from '@nestjs/common';
 
-export const ContractsProviders = [
+export const ContractsProviders: Provider[] = [
   {
     provide: IContractsController,
     useClass: ContractController,

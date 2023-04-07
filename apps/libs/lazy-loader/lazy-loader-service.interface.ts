@@ -11,10 +11,18 @@ export abstract class ILazyLoaderService {
   abstract lazyCreate<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T>;
 
   /***
-   * If in factory, it resolves all dependencies to creatin instance of a class
+   * Async resolves all dependencies to certain instance of a class
    *
    * @param clazz
    * @param args
    */
-  abstract create<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T>;
+  abstract resolve<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T>;
+
+  /***
+   * Sync resolve all dependencies to certain instance of a class
+   *
+   * @param clazz
+   * @param args
+   */
+  abstract create<T>(clazz: AnyConstructor<T>, ...args: any[]): T;
 }

@@ -62,7 +62,7 @@ export class LazyLoader implements ILazyLoaderService {
     return res as T;
   }
 
-  async create<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T> {
+  async resolve<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T> {
     const types: any[] = Reflect.getMetadata(PARAMTYPES_METADATA, clazz) || [];
     const selfDeclaredDeps: any[] = Reflect.getMetadata(
       SELF_DECLARED_DEPS_METADATA,
@@ -89,6 +89,42 @@ export class LazyLoader implements ILazyLoaderService {
         //Either resolve injection token, or constructor dependency type passed
         injectionTokens[index] ?? dep,
         this.contextId,
+        {
+          strict: false,
+        },
+      );
+      resolved.push(res);
+      index++;
+    }
+    return new clazz(...resolved);
+  }
+
+  create<T>(clazz: AnyConstructor<T>, ...args: any[]): T {
+    const types: any[] = Reflect.getMetadata(PARAMTYPES_METADATA, clazz) || [];
+    const selfDeclaredDeps: any[] = Reflect.getMetadata(
+      SELF_DECLARED_DEPS_METADATA,
+      clazz,
+    );
+
+    //Check if there are no decorators used, that override provider to injection token
+    const injectionTokens =
+      selfDeclaredDeps?.reduce((acc, cv, i, arr) => {
+        acc[cv.index] = cv.param;
+        return acc;
+      }, []) || [];
+
+    //Resolved dependencies
+    const resolved = args;
+
+    let index = 0;
+    for (const dep of types) {
+      if (index < resolved.length) {
+        index++;
+        continue;
+      }
+      const res = this.moduleRef.get(
+        //Either resolve injection token, or constructor dependency type passed
+        injectionTokens[index] ?? dep,
         {
           strict: false,
         },

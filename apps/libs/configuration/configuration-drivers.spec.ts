@@ -55,17 +55,17 @@ class Nested {
 @BootstrapConfig()
 export class BootstrapTestConfig {
   @ConfigProperty()
-  fromServer: boolean = false;
+  fromServer = false;
   @ConfigProperty('fromYaml')
-  fromYaml: boolean = false;
+  fromYaml = false;
 }
 
 @Config()
 export class TestConfig {
   @ConfigProperty('fromServer')
-  fromServer: boolean = false;
+  fromServer = false;
   @ConfigProperty('fromYaml')
-  fromYaml: boolean = false;
+  fromYaml = false;
 }
 
 describe('Configuration Drivers', () => {

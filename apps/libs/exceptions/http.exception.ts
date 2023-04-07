@@ -27,7 +27,7 @@ export class HttpException extends NestJsHttpException {
     return this;
   }
 
-  cause(error: Error): HttpException {
+  setCause(error: Error): HttpException {
     this._cause = error;
     return this;
   }

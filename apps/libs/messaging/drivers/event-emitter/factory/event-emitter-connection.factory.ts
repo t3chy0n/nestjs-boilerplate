@@ -24,7 +24,7 @@ export class EventEmitterConnectionFactory
     );
 
     const results = connections.map(async (configData: any) => {
-      return await this.lazy.create(EventEmitterConnection, configData);
+      return await this.lazy.resolve(EventEmitterConnection, configData);
     });
 
     return results;

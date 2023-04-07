@@ -33,7 +33,7 @@ export class RabbitmqConnectionFactory implements IMessagingConnectionFactory {
           rejectUnauthorized: false,
         }),
       };
-      return await this.lazy.create(
+      return await this.lazy.resolve(
         RabbitmqConnection,
         configData,
         socketOptions,

@@ -11,8 +11,9 @@ import { BalancesService } from '@app/profile/services/balances.service';
 import { ILazyLoaderService } from '@libs/lazy-loader/lazy-loader-service.interface';
 import { IJobsService } from '@app/job/interfaces/jobs-service.interface';
 import { JobsService } from '@app/job/services/jobs.service';
+import { Provider } from "@nestjs/common";
 
-export const ProfilesProviders = [
+export const ProfilesProviders: Provider[] = [
   {
     provide: IProfilesController,
     useClass: ProfilesController,

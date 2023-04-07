@@ -2,7 +2,7 @@ export const CONFIGURATION_MAIN_KEY_METADATA = 'Configuration.main.key';
 export const CONFIGURATION_KEY_METADATA = 'Configuration.key';
 
 import { applyDecorators } from '@nestjs/common';
-import { ProvideIn, UseProxy } from '@libs/discovery/discover';
+import { ProvideIn } from '@libs/discovery/discover';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 import {
   IBootstrapConfiguration,
