@@ -50,6 +50,7 @@
     "apache-flink-statefun": "^3.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
+    "json-ptr": "^3.1.1",
     "kafkajs": "^2.1.0",
     "lodash": "^4.17.21",
     "openapi-to-postmanv2": "^3.2.1",
