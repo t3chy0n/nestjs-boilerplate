@@ -24,6 +24,7 @@ function ensureAdviceCb(
   key: any,
   cb: (target: any, property: symbol | number, ...args: any[]) => any,
 ) {
+  const t = Reflect.getMetadataKeys(target) || {};
   const callbacks = Reflect.getMetadata(metadataKey, target) || {};
   dumpDefaults(target, key);
 
@@ -35,14 +36,24 @@ function ensureAdviceCb(
 }
 
 export function Before(
-  cb: (target: any, property: symbol | number, ...args: any[]) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    ...args: any[]
+  ) => any,
 ) {
   return (target: any, key: string | symbol | undefined, index?: number) => {
     ensureAdviceCb(ADVICES_BEFORE, target, key, cb);
   };
 }
 export function After(
-  cb: (target: any, property: symbol | number, ...args: any[]) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    ...args: any[]
+  ) => any,
 ) {
   return (target: any, key: string | symbol | undefined, index?: number) => {
     ensureAdviceCb(ADVICES_AFTER, target, key, cb);
@@ -50,13 +61,23 @@ export function After(
 }
 
 export function Around(
-  cb: (target: any, property: symbol | number, ...args: any[]) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    ...args: any[]
+  ) => any,
 ) {
   return applyDecorators(Before(cb), After(cb));
 }
 
 export function AfterThrow(
-  cb: (target: any, property: symbol | number, ...args: any[]) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    ...args: any[]
+  ) => any,
 ) {
   return (target: any, key: string | symbol | undefined, index?: number) => {
     ensureAdviceCb(ADVICES_AFTER_THROW, target, key, cb);
@@ -64,21 +85,36 @@ export function AfterThrow(
 }
 
 export function BeforeSetter(
-  cb: (target: any, property: symbol | number, ...args: any[]) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    ...args: any[]
+  ) => any,
 ) {
   return (target: any, key: string | symbol | undefined, index?: number) => {
     ensureAdviceCb(ADVICES_SETTER_BEFORE, target, key, cb);
   };
 }
 export function AfterSetter(
-  cb: (target: any, property: symbol | number, ...args: any[]) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    ...args: any[]
+  ) => any,
 ) {
   return (target: any, key: string | symbol | undefined, index?: number) => {
     ensureAdviceCb(ADVICES_SETTER_AFTER, target, key, cb);
   };
 }
 export function AfterThrowSetter(
-  cb: (target: any, property: symbol | number, args: Error) => any,
+  cb: (
+    ctx: Record<any, any>,
+    target: any,
+    property: symbol | number,
+    args: Error,
+  ) => any,
 ) {
   return (target: any, key: string | symbol | undefined, index?: number) => {
     ensureAdviceCb(ADVICES_SETTER_AFTER_THROW, target, key, cb);

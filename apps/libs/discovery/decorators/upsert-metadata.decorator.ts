@@ -12,7 +12,6 @@ export function UpsertMetadata<K = string, V = any[]>(
       Reflect.defineMetadata(metadataKey, values, descriptor.value);
       return descriptor;
     }
-    values.push(target);
     Reflect.defineMetadata(metadataKey, values, target);
     return target;
   };

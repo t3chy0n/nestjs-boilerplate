@@ -114,7 +114,7 @@ export class MessagingInstaller implements OnApplicationBootstrap {
 
     const providers = (await this.providersFinder(OUTGOING_METADATA_KEY)) ?? [];
     for (const key of Object.keys(providers)) {
-      this.logger.log(`Registering incomming handlers from ${key}`);
+      this.logger.log(`Registering outgoing handlers from ${key}`);
       const channel = key;
 
       await Promise.all(

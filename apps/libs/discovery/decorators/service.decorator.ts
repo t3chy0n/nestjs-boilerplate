@@ -1,16 +1,21 @@
-import { InjectableOptions } from '@nestjs/common';
+import { applyDecorators, InjectableOptions } from '@nestjs/common';
 import { getDecoratorCallerPath } from '@libs/discovery/utils';
 import { AllServices } from '@libs/discovery/registry';
 import {
   INJECTABLE_WATERMARK,
   SCOPE_OPTIONS_METADATA,
 } from '@nestjs/common/constants';
+import { InjectFactory } from '@libs/discovery/const';
 
-export function Service(options?: InjectableOptions): ClassDecorator {
-  return (target: object) => {
+export function Service(
+  options?: InjectableOptions & InjectFactory,
+): ClassDecorator {
+  return applyDecorators( (target: any) => {
     const path = getDecoratorCallerPath();
-    AllServices[path] = target;
+    const index = `${path}||${target.name}`;
+    AllServices[index] = target;
     Reflect.defineMetadata(INJECTABLE_WATERMARK, true, target);
     Reflect.defineMetadata(SCOPE_OPTIONS_METADATA, options, target);
-  };
+    Reflect.defineMetadata(SCOPE_OPTIONS_METADATA, options, target);
+  });
 }

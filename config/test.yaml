@@ -7,12 +7,16 @@ test:
     arr:
       - a: t
         b: 1
+        c: 1
       - a: t
         b: t
+        c: t
     arr2:
       rec1:
         a: t
         b: 1
+        c: 1
       rec2:
         a: t
         b: t
+        c: t

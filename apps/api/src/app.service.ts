@@ -26,14 +26,17 @@ import { MODULE_METADATA } from '@nestjs/common/constants';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
 import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
-import { ILazyLoaderService } from "@libs/lazy-loader/lazy-loader-service.interface";
-import { ILogger } from "@libs/logger/logger.interface";
+import {Traceable, Traced} from "@libs/telemetry/decorators/traced.decorator";
 
 class Inner {
   @IsDefined()
   a: string;
   @IsDefined()
   b: string;
+
+
+  @IsDefined()
+  c: string;
 }
 class Nested {
   a: string;
@@ -48,26 +51,31 @@ class Nested {
 }
 
 @Config('test')
+@Traceable()
 export class TestConfig {
 
   constructor(
-    lazy: ILogger
   ) {
     console.log("TESTEST")
   }
   @ConfigProperty('inner')
-  a = '';
+  @Traced()
+  a: string = '';
   @ConfigProperty('inner2')
-  b = '';
+  @Traced()
+  b: string = '';
   @ConfigProperty('inner3')
+  @Traced()
   c: Nested;
   @ConfigProperty('inner3')
+  @Traced()
   test() {
     return 'asd2';
   }
 }
 
 @Injectable()
+@Traceable()
 // @UsePipes(new ValidationPipe({ transform: true }))
 export class AppService {
   constructor(private readonly config: TestConfig) {
@@ -82,6 +90,7 @@ export class AppService {
     console.log('Config');
   }
   @Outgoing('test_outgoing_message')
+  @Traced()
   async getHello(): Promise<any> {
     const a = this.config.a;
     const b = this.config.b;

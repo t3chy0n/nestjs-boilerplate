@@ -2,6 +2,7 @@ import { ModuleMetadata } from '@nestjs/common/interfaces/modules/module-metadat
 import { getDecoratorCallerPath } from '@libs/discovery/utils';
 import { AllModules } from '@libs/discovery/registry';
 
+
 export function Module(metadata: ModuleMetadata) {
   return (target: object) => {
     const path = getDecoratorCallerPath();

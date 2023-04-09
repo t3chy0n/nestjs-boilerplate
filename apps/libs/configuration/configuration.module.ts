@@ -21,7 +21,7 @@ import './configuration.factory';
 import { BootstrapConfigurationFactory } from './bootsrap-configuration.factory';
 import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configuration-factory.interface';
 
-import {Module} from "@libs/discovery/decorators/module.decorator";
+import { Module } from '@libs/discovery/decorators/module.decorator';
 
 @Global()
 @Module({

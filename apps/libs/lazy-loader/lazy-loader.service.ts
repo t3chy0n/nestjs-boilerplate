@@ -1,10 +1,9 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ContextIdFactory, ModuleRef } from '@nestjs/core';
 import { ILazyLoaderService } from './lazy-loader-service.interface';
 import { Lazy } from './lazy';
 import { AnyConstructor } from './types';
 
-import { ILogger } from '../logger/logger.interface';
 import {
   PARAMTYPES_METADATA,
   PROPERTY_DEPS_METADATA,
@@ -14,12 +13,10 @@ import {
 @Injectable()
 export class LazyLoader implements ILazyLoaderService {
   private contextId;
+  private readonly logger = new Logger(LazyLoader.name);
 
   private toLazyLoad: Lazy<any>[] = [];
-  constructor(
-    private readonly moduleRef: ModuleRef,
-    private readonly logger: ILogger,
-  ) {
+  constructor(private readonly moduleRef: ModuleRef) {
     this.contextId = ContextIdFactory.create();
   }
 
@@ -93,6 +90,7 @@ export class LazyLoader implements ILazyLoaderService {
           strict: false,
         },
       );
+
       resolved.push(res);
       index++;
     }
@@ -133,5 +131,18 @@ export class LazyLoader implements ILazyLoaderService {
       index++;
     }
     return new clazz(...resolved);
+  }
+
+  async instantiate<T>(clazz: AnyConstructor<T>) {
+    const res = await this.moduleRef.resolve(
+      //Either resolve injection token, or constructor dependency type passed
+      clazz,
+      this.contextId,
+      {
+        strict: false,
+      },
+    );
+
+    return res;
   }
 }

@@ -11,15 +11,9 @@ import {
   PROXY_FIELD_DEFAULTS,
 } from '@libs/discovery/const';
 import { Bean } from '@libs/discovery/bean';
-import { ILazyLoaderService } from '@libs/lazy-loader/lazy-loader-service.interface';
-import { LazyLoaderModule } from '@libs/lazy-loader/lazy-loader.module';
 
 export const discovered = [];
 
-// const importsProxy;
-// const exportsProxy;
-// const providersProxy;
-// const controllersProxy;
 
 export function ProvideIn<T = any>(
   inject?: Array<InjectionToken | OptionalFactoryDependency>,
@@ -46,22 +40,29 @@ export function ProvideIn<T = any>(
 
     Reflect.defineMetadata(
       MODULE_METADATA.IMPORTS,
-      [...parentImports, LazyLoaderModule].filter((m) => m !== module),
+      [...parentImports].filter((m) => m !== module),
       module,
     );
+
+    const instanceToken = `AUTO_DISCOVERY_${target.name}`
 
     Reflect.defineMetadata(
       MODULE_METADATA.PROVIDERS,
       [
         ...providers,
         {
+          provide: instanceToken,
+          useClass: target,
+        },
+        {
           provide: target,
           useFactory: async (...args) => {
-            const [lazyLoader, ...rest] = args;
-            const bean = new Bean(target, lazyLoader, rest);
+            const [instance, ...rest] = args;
+            const bean = new Bean(target, rest);
+            await bean.setInstance(instance);
             return bean.createProxy();
           },
-          inject: [ILazyLoaderService, ...inject],
+          inject: [instanceToken, ...inject],
         },
       ],
       module,
@@ -76,6 +77,9 @@ export function ProvideIn<T = any>(
       Reflect.getMetadata(MODULE_METADATA.PROVIDERS, module) || [];
 
     const exports2: Provider[] =
+      Reflect.getMetadata(MODULE_METADATA.EXPORTS, module) || [];
+
+    const imports2: Provider[] =
       Reflect.getMetadata(MODULE_METADATA.EXPORTS, module) || [];
 
     console.log(

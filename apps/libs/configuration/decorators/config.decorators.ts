@@ -1,8 +1,7 @@
 export const CONFIGURATION_MAIN_KEY_METADATA = 'Configuration.main.key';
 export const CONFIGURATION_KEY_METADATA = 'Configuration.key';
 
-import { applyDecorators } from '@nestjs/common';
-import { ProvideIn } from '@libs/discovery/discover';
+import { applyDecorators, SetMetadata } from '@nestjs/common';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 import {
   IBootstrapConfiguration,
@@ -12,37 +11,96 @@ import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
 import {
   After,
   Before,
-  BelongsTo,
   EnsureParentImports,
 } from '@libs/discovery/decorators/advices.decorators';
+import { ConfigValueWrongTypeException } from '@libs/configuration/exceptions/config-value-wrong-type.exception';
+import { validateSync } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import { createPropertyDecorator } from '@nestjs/swagger/dist/decorators/helpers';
 
-export function Config(key = '', bootstrap = false) {
+export function Config(topConfigKey = ''): ClassDecorator {
   return applyDecorators(
-    // SetMetadata(CONFIGURATION_MAIN_KEY_METADATA, { key, bootstrap }),
-    Injectable(),
-    BelongsTo(ConfigurationModule),
+    (target: any, key: string | symbol | undefined, index?: number) => {
+      Reflect.defineMetadata(
+        CONFIGURATION_MAIN_KEY_METADATA,
+        topConfigKey,
+        target.prototype,
+      );
+    },
+    Injectable({ inject: { config: IConfiguration } }),
     EnsureParentImports(ConfigurationModule),
-    ProvideIn([IConfiguration]),
   );
 }
 
-export function BootstrapConfig(key = '') {
+export function BootstrapConfig(key = ''): ClassDecorator {
   return applyDecorators(
-    // SetMetadata(CONFIGURATION_MAIN_KEY_METADATA, { key, bootstrap }),
-    Injectable(),
-    BelongsTo(ConfigurationModule),
+    (target: any, key: string | symbol | undefined, index?: number) => {
+      Reflect.defineMetadata(CONFIGURATION_MAIN_KEY_METADATA, key, target);
+    },
+    Injectable({ inject: { config: IBootstrapConfiguration } }),
     EnsureParentImports(ConfigurationModule),
-    ProvideIn([IBootstrapConfiguration]),
   );
 }
 
-export const ConfigProperty = (key = '', bootstrap = false) => {
+function validateConfigValue(value, type, composedConfigKey) {
+  if (typeof value === 'object') {
+    validateObjectValue(value, type);
+  } else {
+    validatePrimitiveValue(value, type, composedConfigKey);
+  }
+}
+
+function validatePrimitiveValue(value, type, composedConfigKey) {
+  const match = (typeof value).toLowerCase() === type.name.toLowerCase();
+  if (!match) {
+    throw new ConfigValueWrongTypeException(
+      `${composedConfigKey} expects to be ${type.name} type!`,
+    );
+  }
+}
+
+function validateObjectValue(value, type) {
+  const e = validateSync(plainToInstance(type, value));
+  if (e.length > 0) {
+    throw new ConfigValueWrongTypeException(e);
+  }
+}
+
+export const ConfigProperty = (key = ''): PropertyDecorator => {
   return applyDecorators(
-    Before((a, b, config: IConfiguration) => {
-      console.log('Accessed proxy', a, b);
-      return '';
-    }),
-    After((a, b, config: IConfiguration) => {
+    createPropertyDecorator(CONFIGURATION_KEY_METADATA, { key }, true),
+    Before(
+      (
+        ctx,
+        target,
+        property,
+        { config, ...rest }: { config: IConfiguration },
+      ) => {
+        const asd2 = Reflect.getMetadataKeys(target);
+        const configKey = Reflect.getMetadata(
+          CONFIGURATION_MAIN_KEY_METADATA,
+          target,
+        );
+
+        const typeMeta = Reflect.getMetadata(
+          'design:type',
+          target,
+          property?.toString(),
+        );
+
+        const composedConfigKey = configKey
+          ? `${configKey}.${key ?? property.toString()}`
+          : key && key != ''
+          ? key
+          : property;
+
+        console.log('Accessed proxy', target, property, composedConfigKey);
+        const resultValue = config.get(composedConfigKey?.toString());
+        validateConfigValue(resultValue, typeMeta, composedConfigKey);
+        return resultValue;
+      },
+    ),
+    After((ctx, a, b, config: IConfiguration) => {
       console.log('Finished accessing proxy', a, b);
       return '';
     }),

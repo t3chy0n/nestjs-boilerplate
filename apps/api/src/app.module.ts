@@ -19,10 +19,12 @@ import { FlinkFunctionsModule } from '@libs/flink/flink-functions.installer';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
 import {Module} from "@libs/discovery/decorators/module.decorator";
+import {LoggerModule} from "@libs/logger/logger.module";
+import {TelemetryModule} from "@libs/telemetry/telemetry.module";
 
-const modules = [
+const modules: any[] = [
   DbModule,
-  FlinkFunctionsModule,
+  // FlinkFunctionsModule,
   MessagingModule.forRoot(),
   RequestContextModule,
   ExceptionsModule.forRoot(),
@@ -33,7 +35,9 @@ const modules = [
   JobsModule,
   ContractsModule,
   ProfilesModule,
+  LoggerModule,
   ConfigurationModule,
+  TelemetryModule,
 ];
 
 if (process.env.NODE_ENV !== 'production') {
