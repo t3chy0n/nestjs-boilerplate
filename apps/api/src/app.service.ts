@@ -1,4 +1,10 @@
-import { Logger, Provider, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  HttpException,
+  Logger,
+  Provider,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Outgoing } from '@libs/messaging/decorators/outgoing.decorator';
 import { Incoming } from '@libs/messaging/decorators/incoming.decorator';
 import {
@@ -26,14 +32,13 @@ import { MODULE_METADATA } from '@nestjs/common/constants';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
 import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
-import {Traceable, Traced} from "@libs/telemetry/decorators/traced.decorator";
+import { Traced } from '@libs/telemetry/decorators/traced.decorator';
 
 class Inner {
   @IsDefined()
   a: string;
   @IsDefined()
   b: string;
-
 
   @IsDefined()
   c: string;
@@ -49,33 +54,29 @@ class Nested {
   @ValidateNested({ each: true })
   arr2: Map<string, Inner>;
 }
-
+@Traced
 @Config('test')
-@Traceable()
 export class TestConfig {
-
-  constructor(
-  ) {
-    console.log("TESTEST")
+  constructor() {
+    console.log('TESTEST');
   }
   @ConfigProperty('inner')
-  @Traced()
   a: string = '';
   @ConfigProperty('inner2')
-  @Traced()
   b: string = '';
+
   @ConfigProperty('inner3')
-  @Traced()
   c: Nested;
+
   @ConfigProperty('inner3')
-  @Traced()
   test() {
     return 'asd2';
   }
 }
 
 @Injectable()
-@Traceable()
+@Traced
+
 // @UsePipes(new ValidationPipe({ transform: true }))
 export class AppService {
   constructor(private readonly config: TestConfig) {
@@ -89,9 +90,9 @@ export class AppService {
     );
     console.log('Config');
   }
+
   @Outgoing('test_outgoing_message')
-  @Traced()
-  async getHello(): Promise<any> {
+  async getHello(p: string): Promise<any> {
     const a = this.config.a;
     const b = this.config.b;
     const c = this.config.c;
@@ -103,7 +104,6 @@ export class AppService {
       d: this.config.test(),
     };
   }
-
   @Outgoing('test_outgoing_kafka_message')
   getHelloKafka(msg: Payload): string {
     const a = this.config.a;

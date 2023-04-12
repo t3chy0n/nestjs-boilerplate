@@ -40,7 +40,7 @@ export function getDecoratorCallerPath() {
   //TODO: This is big if part, its not certain that callstack will look like this on every env but its good enough in this case
   //TODO: Ideally in order to test this, should be moved to seperate lib and tested under multiple nodejs configurations
   // for scoring an
-  const stack = new Error().stack.match(/ __decorate.+[(](.+?):.*?:.*?[)]/i);
+  const stack = new Error().stack.match(/__decorate.+[(](.+?):.*?:.*?[)]/i);
   return stack[1];
 }
 
@@ -73,13 +73,13 @@ class DependencyIndex {
   }
 }
 
-function createDependencyIndex(target) {
-  const depArray = [];
-}
-
 export const moduleAutoMatch = () => {
   const logger = new Logger('Automatching');
 
+  if (!Object.values(AllModules).length) {
+    logger.warn('No modules detected for auto matching.');
+    return;
+  }
   for (const [idx, injectable] of pairs(AllInjectables)) {
     const injectablePath = idx.split('||')[0];
     const moduleAssosiation = Reflect.getMetadata(
@@ -136,18 +136,8 @@ export const moduleAutoMatch = () => {
       ],
       matchedModule,
     );
-
-    const providers22: Provider[] =
-      Reflect.getMetadata(MODULE_METADATA.PROVIDERS, matchedModule) || [];
-
-    const exports2: Provider[] =
-      Reflect.getMetadata(MODULE_METADATA.EXPORTS, matchedModule) || [];
-
-    const imports2: Provider[] =
-      Reflect.getMetadata(MODULE_METADATA.IMPORTS, matchedModule) || [];
-
-    console.log(matchedModule);
   }
+
   for (const [idx, injectable] of pairs(AllFactories)) {
     const injectablePath = idx.split('||')[0];
     const matchedModule = getBestMatchingModule(injectablePath);
@@ -175,7 +165,6 @@ export const moduleAutoMatch = () => {
     const method = Reflect.getMetadata(FACTORY_USED_METHOD_NAME, injectable);
     const options = Reflect.getMetadata(SCOPE_OPTIONS_METADATA, injectable);
 
-
     const dependencyIndex = new DependencyIndex(injectable.constructor);
     Reflect.defineMetadata(
       MODULE_METADATA.PROVIDERS,
@@ -188,7 +177,8 @@ export const moduleAutoMatch = () => {
             if (!factory[method]) {
               throw new Error('Factory method is not defined');
             }
-            const instance = await factory[method]();
+
+            const instance = await factory[method].call(factory);
             const depObject = dependencyIndex.remapDepsToObject(rest);
             const bean = new Bean(instance.constructor, depObject);
             await bean.setInstance(instance);
@@ -199,18 +189,7 @@ export const moduleAutoMatch = () => {
       ],
       matchedModule,
     );
-
-    const providers22: Provider[] =
-      Reflect.getMetadata(MODULE_METADATA.PROVIDERS, matchedModule) || [];
-
-    const exports2: Provider[] =
-      Reflect.getMetadata(MODULE_METADATA.EXPORTS, matchedModule) || [];
-
-    const imports2: Provider[] =
-      Reflect.getMetadata(MODULE_METADATA.IMPORTS, matchedModule) || [];
-
-    console.log(matchedModule);
   }
 
-  console.log('Auto matched modules');
+  logger.log('Auto matched modules');
 };

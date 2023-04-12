@@ -4,10 +4,13 @@ import { IBootstrapConfiguration } from '../../interfaces/configuration.interfac
 import { BootstrapConfigurationAdapter } from '../../bootstrap-configuration.adapter';
 import { ConfigServerConfiguration } from './config-server.configuration';
 import { EnvDriver } from '../env.driver';
+import { expect, sharedSandbox } from '@utils/test-utils';
 
 describe('config-server Configuration', () => {
   let config: IBootstrapConfiguration;
   let subject: IConfigServerConfiguration;
+
+  const sandbox = sharedSandbox();
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
@@ -37,38 +40,35 @@ describe('config-server Configuration', () => {
 
   describe('should return proper config file url', () => {
     it('when only appName and url are defined', async () => {
-      jest.spyOn(subject, 'getUrl').mockReturnValue('http://mocked');
-      jest.spyOn(subject, 'getAppName').mockReturnValue('app');
-      jest.spyOn(subject, 'getLabel').mockReturnValue(null);
-      jest.spyOn(subject, 'getProfile').mockReturnValue(null);
+      sandbox.stub(subject, 'getUrl').returns('http://mocked');
+      sandbox.stub(subject, 'getAppName').returns('app');
+      sandbox.stub(subject, 'getLabel').returns(null);
+      sandbox.stub(subject, 'getProfile').returns(null);
 
-      expect(await subject.getConfigurationUrl()).toBe(
-        'http://mocked/app.yaml',
-      );
+      const result = await subject.getConfigurationUrl();
+      expect(result[0]).to.be.equal('http://mocked/app.json');
     });
 
     it('when  appName, url, and profile and url are defined', async () => {
-      jest.spyOn(subject, 'getUrl').mockReturnValue('http://mocked');
-      jest.spyOn(subject, 'getAppName').mockReturnValue('app');
-      jest.spyOn(subject, 'getLabel').mockReturnValue(null);
-      jest.spyOn(subject, 'getProfile').mockReturnValue('profile');
+      sandbox.stub(subject, 'getUrl').returns('http://mocked');
+      sandbox.stub(subject, 'getAppName').returns('app');
+      sandbox.stub(subject, 'getLabel').returns(null);
+      sandbox.stub(subject, 'getProfile').returns('profile');
       await config.load();
 
-      expect(await subject.getConfigurationUrl()).toBe(
-        'http://mocked/app-profile.yaml',
-      );
+      const result = await subject.getConfigurationUrl();
+      expect(result[0]).to.be.equal('http://mocked/app-profile.json');
     });
 
     it('when  appName, url, label and profile and url are defined', async () => {
-      jest.spyOn(subject, 'getUrl').mockReturnValue('http://mocked');
-      jest.spyOn(subject, 'getAppName').mockReturnValue('app');
-      jest.spyOn(subject, 'getLabel').mockReturnValue('label');
-      jest.spyOn(subject, 'getProfile').mockReturnValue('profile');
+      sandbox.stub(subject, 'getUrl').returns('http://mocked');
+      sandbox.stub(subject, 'getAppName').returns('app');
+      sandbox.stub(subject, 'getLabel').returns('label');
+      sandbox.stub(subject, 'getProfile').returns('profile');
       await config.load();
 
-      expect(await subject.getConfigurationUrl()).toBe(
-        'http://mocked/label/app-profile.yaml',
-      );
+      const result = await subject.getConfigurationUrl();
+      expect(result[0]).to.be.equal('http://mocked/label/app-profile.json');
     });
   });
 });

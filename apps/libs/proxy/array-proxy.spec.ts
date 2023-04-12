@@ -1,11 +1,14 @@
 import { createArrayProxy } from '@libs/proxy/array.proxy';
+import {expect} from "@utils/test-utils";
+import {assert} from "chai";
 
 describe('createArrayProxy', () => {
   it('should return an object containing the original handler', () => {
     const handler = { a: 1, b: 2 };
     const enricher = [];
     const proxy = createArrayProxy(handler, enricher);
-    expect(proxy).toMatchObject(handler);
+    expect(proxy.a).to.be.equal(handler.a);
+    expect(proxy.b).to.be.equal(handler.b);
   });
 
   it('should return an object with all properties of the original handler', () => {
@@ -13,7 +16,7 @@ describe('createArrayProxy', () => {
     const enricher = [];
     const proxyHandler = createArrayProxy(handler, enricher);
 
-    expect(proxyHandler.customProperty).toBe('customValue');
+    expect(proxyHandler.customProperty).to.be.equal('customValue');
   });
 
   it('should return an object with a get method', () => {
@@ -21,7 +24,7 @@ describe('createArrayProxy', () => {
     const enricher = [];
     const proxyHandler = createArrayProxy(handler, enricher);
 
-    expect(typeof proxyHandler.get).toBe('function');
+    expect(typeof proxyHandler.get).to.be.equal('function');
   });
 
   it('get method should return array methods bound to the target', () => {
@@ -34,8 +37,8 @@ describe('createArrayProxy', () => {
 
     const boundMethod = proxyHandler.get(target, prop, receiver);
 
-    expect(boundMethod()).toBe(3);
-    expect(target).toEqual([1, 2]);
+    expect(boundMethod()).to.be.equal(3);
+    expect(target).to.be.deep.equal([1, 2]);
   });
 
   it('get method should return a generator function for values method', () => {
@@ -49,7 +52,7 @@ describe('createArrayProxy', () => {
     const generator = proxyHandler.get(target, prop, receiver);
     const values = [...generator()];
 
-    expect(values).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(values).to.be.deep.equal([1, 2, 3, 4, 5, 6]);
   });
 
   it('get method should work with a custom enricher function', () => {
@@ -63,23 +66,23 @@ describe('createArrayProxy', () => {
     const generator = proxyHandler.get(target, prop, receiver);
     const values = [...generator()];
 
-    expect(values).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(values).to.be.deep.equal([1, 2, 3, 4, 5, 6]);
   });
 
   describe('Errors', () => {
     it('should throw an error when both handler and enricher arguments are missing', () => {
-      expect(() => {
+      assert.throw(() => {
         createArrayProxy(undefined, undefined);
-      }).toThrowError('handler and enricher arguments are required');
+      }, 'handler and enricher arguments are required');
     });
 
     it('should throw an error when the handler argument is not an object', () => {
       const handler = 'notAnObject';
       const enricher = [];
 
-      expect(() => {
+      assert.throw(() => {
         createArrayProxy(handler, enricher);
-      }).toThrowError('handler argument must be an object');
+      }, 'handler argument must be an object')
     });
 
     it('get method should throw an error when the target is not an array', () => {
@@ -90,9 +93,9 @@ describe('createArrayProxy', () => {
       const prop = 'values';
       const receiver = target;
 
-      expect(() => {
+      assert.throw(() => {
         proxyHandler.get(target, prop, receiver);
-      }).toThrowError('target must be an array');
+      }, 'target must be an array')
     });
   });
   // Add more tests here

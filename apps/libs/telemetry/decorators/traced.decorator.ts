@@ -1,47 +1,145 @@
-import { applyDecorators, SetMetadata } from '@nestjs/common';
-import { createPropertyDecorator } from '@nestjs/swagger/dist/decorators/helpers';
-import { After, Before, EnsureParentImports } from '@libs/discovery';
-import { IConfiguration } from '@libs/configuration/interfaces/configuration.interface';
 import {
-  CONFIGURATION_KEY_METADATA,
-  CONFIGURATION_MAIN_KEY_METADATA,
-} from '@libs/configuration/decorators/config.decorators';
-import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
-import { ConfigurationModule } from '@libs/configuration/configuration.module';
+  After,
+  AfterThrow,
+  Before,
+  EnsureParentImports,
+  Injectable,
+  isClassDecorator,
+  isFieldDecorator,
+  isMethodDecorator,
+} from '@libs/discovery';
 import { ITracing } from '@libs/telemetry/tracing.interface';
 import { TelemetryModule } from '@libs/telemetry/telemetry.module';
+import { SpanStatusCode, TraceFlags } from '@opentelemetry/api';
 
-export function Traceable(topConfigKey = ''): ClassDecorator {
-  return applyDecorators(
-    (target: any, key: string | symbol | undefined, index?: number) => {
-      Reflect.defineMetadata(
-        CONFIGURATION_MAIN_KEY_METADATA,
-        topConfigKey,
-        target.prototype,
+/**
+ * Function that returns a new decorator that applies all decorators provided by param
+ *
+ * Useful to build new decorators (or a decorator factory) encapsulating multiple decorators related with the same feature
+ *
+ * @param decorators one or more decorators (e.g., `ApplyGuard(...)`)
+ *
+ * @publicApi
+ */
+export function applyDecorators(
+  ...decorators: Array<ClassDecorator | MethodDecorator | PropertyDecorator>
+) {
+  return <TFunction extends Function, Y>(
+    target: TFunction | object,
+    propertyKey?: string | symbol,
+    descriptor?: TypedPropertyDescriptor<Y>,
+  ) => {
+    for (const decorator of decorators) {
+      (decorator as MethodDecorator | PropertyDecorator)(
+        target,
+        propertyKey,
+        descriptor,
       );
-    },
-    Injectable({ inject: { tracer: ITracing } }),
-    EnsureParentImports(TelemetryModule),
-  );
+    }
+  };
 }
 
-export const Traced = (key = ''): PropertyDecorator => {
-  let span: any;
+const Traceable = applyDecorators(
+  Injectable({ inject: { tracer: ITracing } }),
+  EnsureParentImports(TelemetryModule),
+);
 
-  return applyDecorators(
-    createPropertyDecorator(CONFIGURATION_KEY_METADATA, { key }, true),
-    Before((ctx, target, property, { tracer }) => {
-      span = tracer.startSpan(
-        `${target?.__proto__?.constructor?.name}:${property?.toString()}`,
-      );
-      ctx.span = span;
-      console.log('Starting accessing proxy', target, property);
-      return '';
-    }),
-    After((ctx, target, b, config: IConfiguration) => {
-      console.log('Finished accessing proxy', target, b);
+const TracedField = applyDecorators(
+  Before((ctx, target, property, { tracer }, ...args) => {
+    tracer.startActiveSpan(
+      `${target?.__proto__?.constructor?.name}:${property?.toString()}`,
+      // activeSpan
+      (span) => {
+        ctx.span = span;
+      },
+    );
+
+    return '';
+  }),
+  After((ctx, target, property, { tracer }, ...args) => {
+    ctx.span?.setAttribute('parameters', args);
+
+    const result = ctx.result;
+    if (result.then) {
+      result
+        .then((r) => {
+          ctx.span?.setAttribute('result', JSON.stringify(r, null, 2));
+        })
+        .finally(() => {
+          // ctx.span?.setStatus(SpanStatusCode.OK);
+          ctx.span?.end();
+        });
+    } else {
+      ctx.span?.setAttribute('result', result);
+
+      // ctx.span?.setStatus(SpanStatusCode.OK);
       ctx.span?.end();
-      return '';
-    }),
-  );
-};
+    }
+    return '';
+  }),
+  AfterThrow((ctx, target, property, { tracer }, exception) => {
+    ctx.span?.recordException(exception);
+    ctx.span?.setAttribute('error', true);
+    ctx.span?.setStatus(SpanStatusCode.ERROR);
+    ctx.span?.end();
+
+    throw exception;
+  }),
+);
+
+function getMethodNames(obj) {
+  let methodNames = [];
+  while (obj) {
+    const properties = Object.getOwnPropertyNames(obj);
+    const methods = properties.filter(
+      (prop) => typeof obj[prop] === 'function',
+    );
+    methodNames = methodNames.concat(methods);
+    obj = Object.getPrototypeOf(obj);
+  }
+  return methodNames;
+}
+
+const SKIP_METHODS_DISCOVERY = [
+  'constructor',
+  '__defineGetter__',
+  '__defineSetter__',
+  'hasOwnProperty',
+  '__lookupGetter__',
+  '__lookupSetter__',
+  'isPrototypeOf',
+  'propertyIsEnumerable',
+  'toString',
+  'valueOf',
+  'toLocaleString',
+];
+
+export function Traced(...args: any[]): any {
+  if (isClassDecorator<any>(args)) {
+    const [constructor] = args;
+    Traceable(constructor);
+
+    const instance = new constructor();
+    const fields = Object.keys(instance);
+    const methods = getMethodNames(instance);
+
+    const toDecorate = new Set([...fields, ...methods]);
+    const allFields = [...toDecorate].filter(
+      (v) => !SKIP_METHODS_DISCOVERY.includes(v),
+    );
+    for (const propertyKey of allFields) {
+      TracedField(constructor.prototype, propertyKey, {});
+    }
+
+    return constructor;
+  } else if (isMethodDecorator(args)) {
+    const [target, propertyKey, descriptor] = args;
+
+    Traceable(target);
+    TracedField(target, propertyKey, descriptor);
+  } else if (isFieldDecorator(args)) {
+    const [target, propertyKey] = args;
+    Traceable(target);
+    TracedField(target, propertyKey);
+  }
+}

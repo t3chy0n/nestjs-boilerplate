@@ -24,15 +24,19 @@ function ensureAdviceCb(
   key: any,
   cb: (target: any, property: symbol | number, ...args: any[]) => any,
 ) {
-  const t = Reflect.getMetadataKeys(target) || {};
-  const callbacks = Reflect.getMetadata(metadataKey, target) || {};
-  dumpDefaults(target, key);
+  try {
+    const t = Reflect.getMetadataKeys(target) || {};
+    const callbacks = Reflect.getMetadata(metadataKey, target) || {};
+    dumpDefaults(target, key);
 
-  if (!callbacks[key]) {
-    callbacks[key] = [];
+    if (!callbacks[key]) {
+      callbacks[key] = [];
+    }
+    callbacks[key].push(cb);
+    Reflect.defineMetadata(metadataKey, callbacks, target);
+  } catch (e) {
+    console.error('Error adding Advice', e);
   }
-  callbacks[key].push(cb);
-  Reflect.defineMetadata(metadataKey, callbacks, target);
 }
 
 export function Before(

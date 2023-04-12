@@ -10,6 +10,6 @@ export class AppController {
    */
   @Get()
   getHealth() {
-    return this.appService.getHello();
+    return this.appService.getHello("tesT");
   }
 }

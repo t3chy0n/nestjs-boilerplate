@@ -7,8 +7,10 @@ import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions'
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
-import {ExpressInstrumentation} from "@opentelemetry/instrumentation-express";
-import {HttpInstrumentation} from "@opentelemetry/instrumentation-http";
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { AmqplibInstrumentation } from '@opentelemetry/instrumentation-amqplib';
+import { KafkaJsInstrumentation } from 'opentelemetry-instrumentation-kafkajs';
 
 // Optionally register instrumentation libraries
 registerInstrumentations({
@@ -32,8 +34,15 @@ const provider = new NodeTracerProvider({
 });
 
 registerInstrumentations({
-    instrumentations: [new ExpressInstrumentation(), new HttpInstrumentation()],
-})
+  instrumentations: [
+    new ExpressInstrumentation(),
+    new HttpInstrumentation(),
+    new AmqplibInstrumentation(),
+    new KafkaJsInstrumentation({
+      // see under for available configuration
+    }),
+  ],
+});
 const exporter = new JaegerExporter(options);
 const processor = new BatchSpanProcessor(exporter);
 provider.addSpanProcessor(processor);

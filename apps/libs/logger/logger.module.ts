@@ -32,29 +32,4 @@ import { HttpLoggerInterceptor } from './interceptors/http-logger.interceptor';
   ],
   exports: [ILogger, LoggerInterceptor, IJsonObfuscator],
 })
-export class LoggerModule {
-  static forTests(logs?: boolean): DynamicModule {
-    return {
-      module: LoggerModule,
-      imports: [ConfigurationModule.forTests()],
-      providers: [
-        ConsoleDriver,
-        {
-          scope: Scope.TRANSIENT,
-          provide: 'LOGGER_DRIVERS',
-          useFactory: (...drivers: ILogger[]) => [...drivers],
-          inject: logs ? [ConsoleDriver] : [],
-        },
-        {
-          provide: ILogger,
-          useClass: LoggerService,
-        },
-        {
-          provide: IJsonObfuscator,
-          useClass: JsonObfuscator,
-        },
-      ],
-      exports: [ILogger, LoggerInterceptor],
-    };
-  }
-}
+export class LoggerModule {}

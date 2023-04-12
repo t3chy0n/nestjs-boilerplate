@@ -5,3 +5,4 @@ export * from './module.decorator';
 export * from './service.decorator';
 export * from './upsert-metadata.decorator';
 export * from './injectable.decorator';
+export * from './utils';

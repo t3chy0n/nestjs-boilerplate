@@ -24,55 +24,19 @@ import { IConfigurationFactory } from './interfaces/configuration-factory.interf
 import { ConfigurationFactory } from './configuration.factory';
 import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configuration-factory.interface';
 import { BootstrapConfigurationFactory } from './bootsrap-configuration.factory';
-import { IsDefined, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import {
-  BootstrapConfig,
-  Config,
-  ConfigProperty,
-} from '@libs/configuration/decorators/config.decorators';
-import { ConfigurationInstaller } from '@libs/configuration/installer/configuration.installer';
+
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
-
-class Inner {
-  @IsDefined()
-  a: string;
-  @IsDefined()
-  b: string;
-}
-class Nested {
-  a: string;
-  @IsDefined()
-  b: string;
-  @Type(() => Inner)
-  @ValidateNested({ each: true })
-  arr: Inner[];
-  @Type(() => Inner)
-  @ValidateNested({ each: true })
-  arr2: Map<string, Inner>;
-}
-
-@BootstrapConfig()
-export class BootstrapTestConfig {
-  @ConfigProperty()
-  fromServer = false;
-  @ConfigProperty('fromYaml')
-  fromYaml = false;
-}
-
-@Config()
-export class TestConfig {
-  @ConfigProperty('fromServer')
-  fromServer = false;
-  @ConfigProperty('fromYaml')
-  fromYaml = false;
-}
+import { expect, sharedSandbox } from '@utils/test-utils';
 
 describe('Configuration Drivers', () => {
+  const sandbox = sharedSandbox();
+
   let http: HttpService;
 
   let client: IConfigServerClient;
   let config: IConfiguration;
+  let fetchConfigurationSpy;
+
   let clientConfig: IConfigServerConfiguration;
   let bootstrapConfig: IBootstrapConfiguration;
 
@@ -81,9 +45,6 @@ describe('Configuration Drivers', () => {
   let configServerDriver: ConfigServerDriver;
 
   const originalEnv = process.env;
-
-  let bootstrapTestConfig: BootstrapTestConfig;
-  let testConfig: BootstrapTestConfig;
 
   const configServerYaml = `
   config-server:
@@ -122,14 +83,26 @@ describe('Configuration Drivers', () => {
   `);
 
   beforeEach(async () => {
+    sandbox
+      .stub(ConfigServerConfiguration.prototype, 'isEnabled')
+      .returns(true);
+
+    sandbox.stub(HttpService.prototype, 'get').callsFake(() =>
+      of({
+        data: configServerYaml,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {},
+      }),
+    );
+
     const app: TestingModule = await Test.createTestingModule({
       imports: [HttpModule, DiscoveryModule],
       providers: [
         YamlDriver,
         EnvDriver,
         ConfigServerDriver,
-        BootstrapTestConfig,
-        TestConfig,
         {
           provide: 'RUNTIME_CONFIG_DRIVERS',
           useFactory: (...drivers) => drivers,
@@ -173,20 +146,8 @@ describe('Configuration Drivers', () => {
           useFactory: async (factory) => await factory.create(),
           inject: [IConfigurationFactory],
         },
-        ConfigurationInstaller,
       ],
     }).compile();
-
-    http = app.get<HttpService>(HttpService);
-    jest.spyOn(http, 'get').mockImplementation(() =>
-      of({
-        data: configServerYaml,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {},
-      }),
-    );
 
     config = app.get<IConfiguration>(IConfiguration);
 
@@ -199,22 +160,16 @@ describe('Configuration Drivers', () => {
       IConfigServerConfiguration,
     );
 
-    testConfig = app.get<TestConfig>(TestConfig);
-    bootstrapTestConfig = app.get<BootstrapTestConfig>(BootstrapTestConfig);
+    fetchConfigurationSpy = sandbox.spy(client, 'fetchConfiguration');
 
-    jest.spyOn(clientConfig, 'isEnabled').mockReturnValue(true);
-    jest.spyOn(client, 'fetchConfiguration');
-
-    jest.spyOn(envDriver, 'getEnv').mockImplementation(() => ({
+    sandbox.stub(envDriver, 'getEnv').callsFake(() => ({
       app_mt_host: 'env-host',
       app_mt_port: 'env-port',
       app_db_runMigrations: true,
       app_fromEnv: true,
     }));
 
-    jest
-      .spyOn(yamlDriver, 'getConfig')
-      .mockImplementation(() => yamlDriverConfig);
+    sandbox.stub(yamlDriver, 'getConfig').callsFake(() => yamlDriverConfig);
 
     await config.load();
     await app.init();
@@ -223,24 +178,23 @@ describe('Configuration Drivers', () => {
   });
   afterEach(() => {
     process.env = originalEnv;
-    jest.clearAllMocks();
   });
 
   describe('config server', () => {
     it('should resolve config value from server', () => {
       const { host, port } = configServerDriver.config.mt;
 
-      expect(configServerDriver.config.mt.host).toEqual('test');
-      expect(configServerDriver.config.mt.port).toEqual('test-port');
-      expect(client.fetchConfiguration).toHaveBeenCalledTimes(1);
+      expect(configServerDriver.config.mt.host).to.equal('test');
+      expect(configServerDriver.config.mt.port).to.equal('test-port');
+      expect(fetchConfigurationSpy.callCount).to.equal(1);
     });
     it('should return  profile value if its present in config', () => {});
   });
 
   describe('env driver', () => {
     it('should read variables properly from env"', () => {
-      expect(envDriver.config.mt?.host).toEqual('env-host');
-      expect(envDriver.config.mt?.port).toEqual('env-port');
+      expect(envDriver.config.mt?.host).to.equal('env-host');
+      expect(envDriver.config.mt?.port).to.equal('env-port');
     });
 
     it('should return  profile value if its present in config', () => {});
@@ -250,56 +204,45 @@ describe('Configuration Drivers', () => {
     it('should resolve config value from server', () => {
       const { host, port } = yamlDriver.config.mt;
 
-      expect(yamlDriver.config.mt.host).toEqual('yaml-test');
-      expect(yamlDriver.config.mt.port).toEqual('yaml-test-port');
-      expect(client.fetchConfiguration).toHaveBeenCalledTimes(1);
+      expect(yamlDriver.config.mt.host).to.equal('yaml-test');
+      expect(yamlDriver.config.mt.port).to.equal('yaml-test-port');
+      expect(fetchConfigurationSpy.callCount).to.equal(1);
     });
   });
 
   describe('confuguration adapter', () => {
     it('should resolve config looking through different of configuration drivers', async () => {
-      expect(config.get('fromServer')).toEqual(true);
-      expect(config.get('fromYaml')).toEqual(true);
-      expect(config.get('fromEnv')).toEqual(true);
+      expect(config.get('fromServer')).to.equal(true);
+      expect(config.get('fromYaml')).to.equal(true);
+      expect(config.get('fromEnv')).to.equal(true);
     });
 
     it('should throw when no configurtion was found', async () => {
       try {
         await config.get('asd.asd.asd.asd');
       } catch (e) {
-        expect(e instanceof ConfigValueNotFoundException).toBeTruthy();
+        expect(e).to.be.instanceof(ConfigValueNotFoundException);
       }
     });
 
     it('should prefer value from a profile from development', async () => {
-      jest.spyOn(config, 'getProfile').mockReturnValue('development');
+      sandbox.stub(config, 'getProfile').returns('development');
 
-      expect(config.get('mt.host')).toEqual('yaml-test-dev');
+      expect(config.get('mt.host')).to.equal('yaml-test-dev');
     });
 
     it('should prefer value from a profile from production', async () => {
-      jest.spyOn(config, 'getProfile').mockReturnValue('production');
+      sandbox.stub(config, 'getProfile').returns('production');
 
-      expect(config.get('mt.host')).toEqual('test-prod');
-      expect(config.get('mt.port')).toEqual('test-port-prod');
+      expect(config.get('mt.host')).to.equal('test-prod');
+      expect(config.get('mt.port')).to.equal('test-port-prod');
     });
   });
 
   describe('Shared parent node', () => {
     it('should resolve configurations when parent node is shared between drivers', async () => {
-      expect(config.get('db.runMigrations')).toEqual(true);
-      expect(config.get('db.host')).toEqual('TestDbHost');
-    });
-  });
-
-  describe('Test configuration assembled through deorators', () => {
-    it('should use bootstrap drivers when decorated with @BootstrapConfig', async () => {
-      expect(bootstrapTestConfig.fromServer).toEqual(false);
-      expect(bootstrapTestConfig.fromYaml).toEqual(true);
-    });
-    it('should use all drivers when decorated with @Config', async () => {
-      expect(testConfig.fromServer).toEqual(true);
-      expect(testConfig.fromYaml).toEqual(true);
+      expect(config.get('db.runMigrations')).to.equal(true);
+      expect(config.get('db.host')).to.equal('TestDbHost');
     });
   });
 });

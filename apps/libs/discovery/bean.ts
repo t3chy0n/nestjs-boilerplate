@@ -48,16 +48,36 @@ export class Bean<T> {
       call(ctx, this.instance, property, this.injected),
     ) ?? [this.defaults[property]];
 
-    const overriden = (...args) => {
-      const result = method?.call(this.instance, ...args);
-      //Call finishers if any from decorator
-      const results = afterCallbacks[property]?.map((call) =>
-        call(ctx, this.instance, property, this.injected, ...args),
-      ) ?? [this.defaults[property]];
-      return result;
+    const overridden = (...args) => {
+      try {
+        let result = method?.call(this.instance, ...args);
+        //Call finishers if any from decorator
+        ctx.result = result;
+
+        if (result?.catch) {
+          result = result
+            .then((res) => {
+              const results = afterCallbacks[property]?.map((call) =>
+                call(ctx, this.instance, property, this.injected, ...args),
+              ) ?? [this.defaults[property]];
+              return res;
+            })
+            .catch((e) => {
+              this.wireExceptionAdvices(property, e, ctx);
+            });
+        } else {
+          const results = afterCallbacks[property]?.map((call) =>
+            call(ctx, this.instance, property, this.injected, ...args),
+          ) ?? [this.defaults[property]];
+        }
+
+        return result;
+      } catch (e) {
+        this.wireExceptionAdvices(property, e, ctx);
+      }
     };
 
-    return overriden.bind(this.instance);
+    return overridden.bind(this.instance);
   }
 
   wireExceptionAdvices(
@@ -65,9 +85,9 @@ export class Bean<T> {
     e: Error,
     ctx: Record<any, any>,
   ) {
-    if (this.afterThrowings.length) {
+    if (this.afterThrowings[property]?.length) {
       this.afterThrowings[property]?.forEach((call) =>
-        call(ctx, this.instance, property, e),
+        call(ctx, this.instance, property, this.injected, e),
       );
     } else {
       throw e;
@@ -83,17 +103,19 @@ export class Bean<T> {
     //If its not a function we need to return some value
     const results = beforeCallbacks[property]?.map((call) =>
       call(ctx, this.instance, property, this.injected),
-    ) ?? [this.defaults[property]];
+    ) ?? [this.defaults[property] ?? this.instance[property]];
 
     let res;
     if (!results.length) {
-      res = this.defaults[property];
+      res = this.defaults[property] ?? this.instance[property];
     }
     if (results.length === 1) {
       res = results[0];
     } else {
       res = results;
     }
+
+    ctx.result = res;
 
     afterCallbacks[property]?.map((call) =>
       call(ctx, this.instance, property, this.injected),

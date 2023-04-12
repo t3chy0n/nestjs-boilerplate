@@ -1,3 +1,2 @@
-export abstract class ITracing {
 
-}
+export abstract class ITracing {}

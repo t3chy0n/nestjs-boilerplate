@@ -1,0 +1,18 @@
+{
+    "require": [
+        "ts-node/register",
+        "tsconfig-paths/register",
+        "reflect-metadata"
+    ],
+    "extensions": ["ts", "tsx"],
+
+    "file": "./mocha-global-hooks.js",
+    "spec": [
+        "src/**/*.spec.*",
+        "test/**/*.spec.*"
+    ],
+    "watch-files": [
+        "src",
+        "test"
+    ]
+}

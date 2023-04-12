@@ -25,13 +25,4 @@ export class MessagingModule {
       exports: [MessagingInstaller, 'MESSAGING_CONNECTIONS'],
     };
   }
-
-  static forTests(): DynamicModule {
-    return {
-      module: MessagingModule,
-      imports: [LoggerModule.forTests(), ExceptionsModule.forTests()],
-
-      exports: [MessagingInstaller, 'MESSAGING_CONNECTIONS'],
-    };
-  }
 }

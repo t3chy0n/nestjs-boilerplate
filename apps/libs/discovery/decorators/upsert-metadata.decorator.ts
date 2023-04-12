@@ -6,13 +6,13 @@ export function UpsertMetadata<K = string, V = any[]>(
 ): CustomDecorator<K> {
   const decoratorFactory = (target: object, key?: any, descriptor?: any) => {
     let values = Reflect.getMetadata(metadataKey, target) ?? [];
-    values = [...values, ...metadataValue];
+    values = new Set([...values, ...metadataValue]);
 
     if (descriptor) {
-      Reflect.defineMetadata(metadataKey, values, descriptor.value);
+      Reflect.defineMetadata(metadataKey, [...values], descriptor.value);
       return descriptor;
     }
-    Reflect.defineMetadata(metadataKey, values, target);
+    Reflect.defineMetadata(metadataKey, [...values], target);
     return target;
   };
   decoratorFactory.KEY = metadataKey;

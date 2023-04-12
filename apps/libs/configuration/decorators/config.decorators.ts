@@ -8,11 +8,7 @@ import {
   IConfiguration,
 } from '@libs/configuration/interfaces/configuration.interface';
 import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
-import {
-  After,
-  Before,
-  EnsureParentImports,
-} from '@libs/discovery/decorators/advices.decorators';
+import { After, Before, EnsureParentImports } from '@libs/discovery';
 import { ConfigValueWrongTypeException } from '@libs/configuration/exceptions/config-value-wrong-type.exception';
 import { validateSync } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
@@ -42,7 +38,7 @@ export function BootstrapConfig(key = ''): ClassDecorator {
   );
 }
 
-function validateConfigValue(value, type, composedConfigKey) {
+export function validateConfigValue(value, type, composedConfigKey) {
   if (typeof value === 'object') {
     validateObjectValue(value, type);
   } else {
@@ -50,7 +46,7 @@ function validateConfigValue(value, type, composedConfigKey) {
   }
 }
 
-function validatePrimitiveValue(value, type, composedConfigKey) {
+export function validatePrimitiveValue(value, type, composedConfigKey) {
   const match = (typeof value).toLowerCase() === type.name.toLowerCase();
   if (!match) {
     throw new ConfigValueWrongTypeException(
@@ -66,40 +62,32 @@ function validateObjectValue(value, type) {
   }
 }
 
-export const ConfigProperty = (key = ''): PropertyDecorator => {
+export const ConfigProperty = (key?: string): PropertyDecorator => {
   return applyDecorators(
     createPropertyDecorator(CONFIGURATION_KEY_METADATA, { key }, true),
-    Before(
-      (
-        ctx,
+    Before((ctx, target, property, inj: any) => {
+      const { config, ...rest }: { config: IConfiguration } = inj;
+      const asd2 = Reflect.getMetadataKeys(target);
+      const configKey = Reflect.getMetadata(
+        CONFIGURATION_MAIN_KEY_METADATA,
         target,
-        property,
-        { config, ...rest }: { config: IConfiguration },
-      ) => {
-        const asd2 = Reflect.getMetadataKeys(target);
-        const configKey = Reflect.getMetadata(
-          CONFIGURATION_MAIN_KEY_METADATA,
-          target,
-        );
+      );
 
-        const typeMeta = Reflect.getMetadata(
-          'design:type',
-          target,
-          property?.toString(),
-        );
+      const typeMeta = Reflect.getMetadata(
+        'design:type',
+        target,
+        property?.toString(),
+      );
 
-        const composedConfigKey = configKey
-          ? `${configKey}.${key ?? property.toString()}`
-          : key && key != ''
-          ? key
-          : property;
+      const composedConfigKey = configKey
+        ? `${configKey}.${key ?? property.toString()}`
+        : key ?? property;
 
-        console.log('Accessed proxy', target, property, composedConfigKey);
-        const resultValue = config.get(composedConfigKey?.toString());
-        validateConfigValue(resultValue, typeMeta, composedConfigKey);
-        return resultValue;
-      },
-    ),
+      console.log('Accessed proxy', target, property, composedConfigKey);
+      const resultValue = config.get(composedConfigKey?.toString());
+      validateConfigValue(resultValue, typeMeta, composedConfigKey);
+      return resultValue;
+    }),
     After((ctx, a, b, config: IConfiguration) => {
       console.log('Finished accessing proxy', a, b);
       return '';
