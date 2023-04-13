@@ -101,18 +101,19 @@ export class Bean<T> {
     ctx: Record<any, any>,
   ) {
     //If its not a function we need to return some value
-    const results = beforeCallbacks[property]?.map((call) =>
-      call(ctx, this.instance, property, this.injected),
-    ) ?? [this.defaults[property] ?? this.instance[property]];
+    const results = beforeCallbacks[property]
+      ?.map((call) => call(ctx, this.instance, property, this.injected))
+      .filter(Boolean) ?? [this.defaults[property] ?? this.instance[property]];
 
     let res;
     if (!results.length) {
       res = this.defaults[property] ?? this.instance[property];
-    }
-    if (results.length === 1) {
-      res = results[0];
     } else {
-      res = results;
+      if (results.length === 1) {
+        res = results[0];
+      } else {
+        res = results;
+      }
     }
 
     ctx.result = res;

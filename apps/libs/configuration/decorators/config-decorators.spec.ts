@@ -9,7 +9,7 @@ import {
 } from './config.decorators';
 import { ConfigValueWrongTypeException } from '@libs/configuration/exceptions/config-value-wrong-type.exception';
 import {
-  mockDiscoveryModuleAnnotations,
+  spyOnDiscoveryModuleAnnotations,
   wireTestProxy,
 } from '@libs/discovery/decorators/test';
 import { IsDefined, IsNumber, IsString } from 'class-validator';
@@ -26,10 +26,10 @@ describe('Annotated Configuration class', () => {
     let AfterSpy;
 
     beforeEach(() => {
-      const { mockBefore, mockAfter } = mockDiscoveryModuleAnnotations(sandbox);
+      const { spyBefore, spyAfter } = spyOnDiscoveryModuleAnnotations(sandbox);
 
-      BeforeSpy = mockBefore;
-      AfterSpy = mockAfter;
+      BeforeSpy = spyBefore;
+      AfterSpy = spyAfter;
 
       mockConfig = {
         get: sandbox.stub(),

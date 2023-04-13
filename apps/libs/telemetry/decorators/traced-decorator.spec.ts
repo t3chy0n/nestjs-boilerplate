@@ -1,139 +1,209 @@
 import { Traced } from './traced.decorator';
-import {
-  EnsureParentImports,
-  Before,
-  After,
-  AfterThrow,
-  Injectable,
-} from '@libs/discovery';
+
 import { ADVICES_ENSURE_PARENT_IMPORTS } from '@libs/discovery/const';
-import { ITracing } from '@libs/telemetry/tracing.interface';
+import { expect, sharedSandbox } from '@utils/test-utils';
+import { JaegerTracerDriver } from '@libs/telemetry/drivers/jaeger/tracer.driver';
+import { Span } from '@opentelemetry/api/build/src/trace/span';
+import {
+  spyOnDiscoveryModuleAnnotations,
+  wireTestProxy,
+} from '@libs/discovery/decorators/test';
+import { assert } from 'chai';
 
-const mockBefore = jest.fn();
-const mockAfter = jest.fn();
-const mockAfterThrow = jest.fn();
-const mockInjectable = jest.fn();
-jest.mock('@libs/discovery', () => {
-  const originalModule = jest.requireActual('@libs/discovery');
-
-  const mockedModule = {
-    ...originalModule,
-    Injectable: jest.fn(() => (target, propertyKey, descriptor) => {
-      mockInjectable(target, propertyKey, descriptor);
-    }),
-    Before: jest.fn(() => (target, propertyKey, descriptor) => {
-      mockBefore(target, propertyKey, descriptor);
-    }),
-    After: jest.fn(() => (target, propertyKey, descriptor) => {
-      mockAfter(target, propertyKey, descriptor);
-    }),
-    AfterThrow: jest.fn(() => (target, propertyKey, descriptor) => {
-      mockAfterThrow(target, propertyKey, descriptor);
-    }),
-  };
-
-  return mockedModule;
-});
 describe('Traced', () => {
-  afterAll(() => {
-    jest.clearAllMocks();
-    jest.resetModules();
-  });
+  const sandbox = sharedSandbox();
 
-  describe('when applied to a field', () => {
-    it('should decorate the field with TracedField decorator', () => {
-      class TestClass {
-        @Traced
-        myField = 123;
+  describe('with Jaeger driver', () => {
+    let BeforeSpy;
+    let AfterSpy;
+    let AfterThrowSpy;
+    let InjectableSpy;
 
-        @Traced
-        myField2 = 123;
+    let tracer;
+    let spanStub: Span;
 
-        @Traced
-        myField3 = 123;
-      }
+    beforeEach(() => {
+      const { spyBefore, spyAfter, spyInjectable, spyAfterThrow } =
+        spyOnDiscoveryModuleAnnotations(sandbox);
 
-      const instance = new TestClass();
+      BeforeSpy = spyBefore;
+      AfterSpy = spyAfter;
+      AfterThrowSpy = spyAfterThrow;
+      InjectableSpy = spyInjectable;
 
-      const moduleImports = Reflect.getMetadata(
-        ADVICES_ENSURE_PARENT_IMPORTS,
-        instance,
+      spanStub = {
+        recordException: sandbox.stub(),
+        setAttribute: sandbox.stub(),
+        setAttributes: sandbox.stub(),
+        isRecording: sandbox.stub(),
+        addEvent: sandbox.stub(),
+        setStatus: sandbox.stub(),
+        spanContext: sandbox.stub(),
+        updateName: sandbox.stub(),
+        end: sandbox.stub(),
+      };
+
+      sandbox.stub(JaegerTracerDriver.prototype, 'initialize');
+      sandbox
+        .stub(JaegerTracerDriver.prototype, 'startActiveSpan')
+        .callsFake((name: string, cb) => {
+          cb(spanStub);
+        });
+
+      tracer = new JaegerTracerDriver(
+        sandbox.stub() as any,
+        sandbox.stub() as any,
       );
-
-      expect(instance.myField).toEqual(123);
-      expect(moduleImports.length).toEqual(1);
     });
-  });
+    describe('when applied to a field', () => {
+      it('should decorate the field with TracedField decorator', () => {
+        class TestClass {
+          @Traced
+          myField = 123;
 
-  describe('when applied to a class', () => {
-    it('should decorate all methods and fields with TracedField decorator', () => {
-      const spy = jest.spyOn(console, 'error').mockImplementation();
+          @Traced
+          myField2 = 123;
 
-      @Traced
-      class TestClass {
-        constructor() {}
-
-        myMethod() {}
-
-        myField = 123;
-      }
-
-      const instance = new TestClass();
-      const methods = Object.getOwnPropertyNames(TestClass.prototype).filter(
-        (prop) =>
-          typeof instance[prop] === 'function' && prop !== 'constructor',
-      );
-
-      expect(Injectable).toHaveBeenCalledWith({
-        inject: { tracer: ITracing },
-      });
-
-      const moduleImports = Reflect.getMetadata(
-        ADVICES_ENSURE_PARENT_IMPORTS,
-        TestClass,
-      );
-      expect(moduleImports.length).toEqual(1);
-      expect(spy).not.toHaveBeenCalled();
-      expect(instance.myField).toEqual(123);
-
-      for (const method of methods) {
-        instance[method]();
-
-        expect(Before).toHaveBeenCalled();
-        // expect(instance.tracer.startActiveSpan).toHaveBeenCalled();
-
-        if (method === 'myMethod') {
-          expect(After).toHaveBeenCalled();
-          expect(AfterThrow).toHaveBeenCalled();
+          @Traced
+          myField3 = 123;
         }
-      }
 
-      spy.mockRestore();
+        const instance = wireTestProxy(TestClass, { tracer });
+
+        const moduleImports = Reflect.getMetadata(
+          ADVICES_ENSURE_PARENT_IMPORTS,
+          new TestClass(),
+        );
+
+        expect(instance.myField).to.be.equal(123);
+        expect(moduleImports.length).to.be.equal(1);
+
+        expect((spanStub.end as any).callCount).to.be.equal(1);
+      });
     });
-  });
 
-  describe('when applied to a method', () => {
-    it('should decorate the method with TracedField decorator', () => {
+    describe('when applied to a class', () => {
+      it('should decorate all methods and fields with TracedField decorator', () => {
+        const spy = sandbox.stub(console, 'error');
 
-      class TestClass {
         @Traced
-        myMethod() {}
-        @Traced
-        myMethod2() {}
-      }
+        class TestClass {
+          constructor() {}
 
-      const instance = new TestClass();
-      instance.myMethod();
+          myMethod() {}
 
-      expect(Before).toHaveBeenCalled();
-      expect(After).toHaveBeenCalled();
-      expect(AfterThrow).toHaveBeenCalled();
+          myField = 123;
+        }
 
-      const moduleImports = Reflect.getMetadata(
-        ADVICES_ENSURE_PARENT_IMPORTS,
-        instance,
-      );
-      expect(moduleImports.length).toEqual(1);
+        const instance = wireTestProxy(TestClass, { tracer });
+        const methods = Object.getOwnPropertyNames(TestClass.prototype).filter(
+          (prop) =>
+            typeof instance[prop] === 'function' && prop !== 'constructor',
+        );
+
+        expect(InjectableSpy).to.have.been.called;
+        expect(
+          InjectableSpy.calledWithMatch(
+            sandbox.match((v) => {
+              return !!v?.inject?.tracer;
+            }, 'Should inject tracer'),
+          ),
+        ).to.be.true;
+
+        const moduleImports = Reflect.getMetadata(
+          ADVICES_ENSURE_PARENT_IMPORTS,
+          TestClass,
+        );
+        expect(moduleImports.length).to.be.equal(1);
+        expect(spy).not.to.have.been.calledWith();
+        expect(instance.myField).to.be.equal(123);
+
+        expect((spanStub.end as any).callCount).to.be.equal(1);
+        for (const method of methods) {
+          instance[method]();
+
+          expect(BeforeSpy).to.have.been.called;
+          // expect(instance.tracer.startActiveSpan).toHaveBeenCalled();
+
+          if (method === 'myMethod') {
+            expect(AfterSpy).to.have.been.called;
+            expect(AfterThrowSpy).to.have.been.called;
+          }
+        }
+      });
+    });
+
+    describe('when applied to a method', () => {
+      it('should decorate the method with TracedField decorator', () => {
+        class TestClass {
+          @Traced
+          myMethod() {}
+          @Traced
+          myMethod2() {}
+        }
+
+        const instance = wireTestProxy(TestClass, { tracer });
+        instance.myMethod();
+
+        expect((spanStub.end as any).callCount).to.be.equal(1);
+      });
+      describe('when Error is thrown', () => {
+        const subjectError = new Error('Test');
+
+        it('should handle trace from sync method', () => {
+          class TestClass {
+            @Traced
+            myMethod() {
+              throw subjectError;
+            }
+          }
+
+          const instance = wireTestProxy(TestClass, { tracer });
+
+          assert.throw(() => {
+            instance.myMethod();
+          });
+
+          const moduleImports = Reflect.getMetadata(
+            ADVICES_ENSURE_PARENT_IMPORTS,
+            new TestClass(),
+          );
+          expect(moduleImports.length).to.be.equal(1);
+          expect(spanStub.recordException).to.have.been.calledWith(
+            subjectError,
+          );
+          expect((spanStub.end as any).callCount).to.be.equal(1);
+        });
+        it('should handle trace from async method', async () => {
+          const subjectError = new Error('Test');
+          class TestClass {
+            @Traced
+            async myMethod() {
+              throw subjectError;
+            }
+          }
+
+          const instance = wireTestProxy(TestClass, { tracer });
+
+          let caughtError;
+          try {
+            await instance.myMethod();
+          } catch (e) {
+            caughtError = e;
+          }
+
+          const moduleImports = Reflect.getMetadata(
+            ADVICES_ENSURE_PARENT_IMPORTS,
+            new TestClass(),
+          );
+          expect(moduleImports.length).to.be.equal(1);
+          expect(caughtError).to.be.equal(subjectError);
+          expect(spanStub.recordException).to.have.been.calledWith(
+            subjectError,
+          );
+          expect((spanStub.end as any).callCount).to.be.equal(1);
+        });
+      });
     });
   });
 });

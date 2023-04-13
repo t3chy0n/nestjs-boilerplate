@@ -8,7 +8,7 @@
 
     "file": "./mocha-global-hooks.js",
     "spec": [
-        "src/**/*.spec.*",
+        "apps/**/*.spec.*",
         "test/**/*.spec.*"
     ],
     "watch-files": [

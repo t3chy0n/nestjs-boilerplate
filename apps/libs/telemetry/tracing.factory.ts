@@ -1,13 +1,13 @@
 import { Factory, Injectable } from '@libs/discovery';
 import { ITracing } from '@libs/telemetry/tracing.interface';
-import opentelemetry from '@opentelemetry/api';
+import { JaegerTracerDriver } from '@libs/telemetry/drivers/jaeger/tracer.driver';
 
 /***
  * Factory class instantiating new tracing service
  */
 @Injectable()
 export class TracingFactory {
-  constructor() {
+  constructor(private jaegerDriver: JaegerTracerDriver) {
     console.log('Tracing Factory');
   }
 
@@ -16,6 +16,8 @@ export class TracingFactory {
    */
   @Factory({ provide: ITracing })
   async create(): Promise<ITracing> {
-    return opentelemetry.trace.getTracer('my-service-tracer');
+
+    this.jaegerDriver.initialize();
+    return this.jaegerDriver;
   }
 }

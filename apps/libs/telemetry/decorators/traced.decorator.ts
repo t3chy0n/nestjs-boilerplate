@@ -3,14 +3,17 @@ import {
   AfterThrow,
   Before,
   EnsureParentImports,
-  Injectable,
+} from '@libs/discovery/decorators/advices.decorators';
+
+import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
+import { ITracing } from '@libs/telemetry/tracing.interface';
+import { TelemetryModule } from '@libs/telemetry/telemetry.module';
+import { SpanStatusCode, TraceFlags } from '@opentelemetry/api';
+import {
   isClassDecorator,
   isFieldDecorator,
   isMethodDecorator,
 } from '@libs/discovery';
-import { ITracing } from '@libs/telemetry/tracing.interface';
-import { TelemetryModule } from '@libs/telemetry/telemetry.module';
-import { SpanStatusCode, TraceFlags } from '@opentelemetry/api';
 
 /**
  * Function that returns a new decorator that applies all decorators provided by param
@@ -39,53 +42,54 @@ export function applyDecorators(
   };
 }
 
-const Traceable = applyDecorators(
-  Injectable({ inject: { tracer: ITracing } }),
-  EnsureParentImports(TelemetryModule),
-);
+const Traceable = () =>
+  applyDecorators(
+    Injectable({ inject: { tracer: ITracing } }),
+    EnsureParentImports(TelemetryModule),
+  );
 
-const TracedField = applyDecorators(
-  Before((ctx, target, property, { tracer }, ...args) => {
-    tracer.startActiveSpan(
-      `${target?.__proto__?.constructor?.name}:${property?.toString()}`,
-      // activeSpan
-      (span) => {
-        ctx.span = span;
-      },
-    );
+const TracedField = () =>
+  applyDecorators(
+    Before((ctx, target, property, { tracer }, ...args) => {
+      tracer.startActiveSpan(
+        `${target?.__proto__?.constructor?.name}:${property?.toString()}`,
+        // activeSpan
+        (span) => {
+          ctx.span = span;
+        },
+      );
+    }),
+    After((ctx, target, property, { tracer }, ...args) => {
+      ctx.span?.setAttribute('parameters', args);
 
-    return '';
-  }),
-  After((ctx, target, property, { tracer }, ...args) => {
-    ctx.span?.setAttribute('parameters', args);
+      const result = ctx.result;
+      if (result?.then) {
+        result
+          .then((r) => {
+            //TODO: Log only spans when dtos are explicitely marked as Loggable. Same logic could be added on property level, to censor props.
+            ctx.span?.setAttribute('result', JSON.stringify(r, null, 2));
+          })
+          .finally(() => {
+            // ctx.span?.setStatus(SpanStatusCode.OK);
+            ctx.span?.end();
+          });
+      } else {
+        ctx.span?.setAttribute('result', result);
 
-    const result = ctx.result;
-    if (result.then) {
-      result
-        .then((r) => {
-          ctx.span?.setAttribute('result', JSON.stringify(r, null, 2));
-        })
-        .finally(() => {
-          // ctx.span?.setStatus(SpanStatusCode.OK);
-          ctx.span?.end();
-        });
-    } else {
-      ctx.span?.setAttribute('result', result);
-
-      // ctx.span?.setStatus(SpanStatusCode.OK);
+        // ctx.span?.setStatus(SpanStatusCode.OK);
+        ctx.span?.end();
+      }
+      return '';
+    }),
+    AfterThrow((ctx, target, property, { tracer }, exception) => {
+      ctx.span?.recordException(exception);
+      ctx.span?.setAttribute('error', true);
+      ctx.span?.setStatus(SpanStatusCode.ERROR);
       ctx.span?.end();
-    }
-    return '';
-  }),
-  AfterThrow((ctx, target, property, { tracer }, exception) => {
-    ctx.span?.recordException(exception);
-    ctx.span?.setAttribute('error', true);
-    ctx.span?.setStatus(SpanStatusCode.ERROR);
-    ctx.span?.end();
 
-    throw exception;
-  }),
-);
+      throw exception;
+    }),
+  );
 
 function getMethodNames(obj) {
   let methodNames = [];
@@ -117,7 +121,7 @@ const SKIP_METHODS_DISCOVERY = [
 export function Traced(...args: any[]): any {
   if (isClassDecorator<any>(args)) {
     const [constructor] = args;
-    Traceable(constructor);
+    Traceable()(constructor);
 
     const instance = new constructor();
     const fields = Object.keys(instance);
@@ -128,18 +132,18 @@ export function Traced(...args: any[]): any {
       (v) => !SKIP_METHODS_DISCOVERY.includes(v),
     );
     for (const propertyKey of allFields) {
-      TracedField(constructor.prototype, propertyKey, {});
+      TracedField()(constructor.prototype, propertyKey, {});
     }
 
     return constructor;
   } else if (isMethodDecorator(args)) {
     const [target, propertyKey, descriptor] = args;
 
-    Traceable(target);
-    TracedField(target, propertyKey, descriptor);
+    Traceable()(target);
+    TracedField()(target, propertyKey, descriptor);
   } else if (isFieldDecorator(args)) {
     const [target, propertyKey] = args;
-    Traceable(target);
-    TracedField(target, propertyKey);
+    Traceable()(target);
+    TracedField()(target, propertyKey);
   }
 }

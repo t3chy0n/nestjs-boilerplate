@@ -11,20 +11,20 @@ export const wireTestProxy = (Ctor: AnyConstructor<any>, inject, ...arg) => {
   return bean.createProxy();
 };
 
-export function mockDiscoveryModuleAnnotations(sandbox: sinon.SinonSandbox) {
-  const mockBefore = sandbox.spy(Advices, 'Before');
-  const mockAfter = sandbox.spy(Advices, 'After');
-  const mockAfterThrow = sandbox.spy(Advices, 'AfterThrow');
-  const mockBeforeSetter = sandbox.spy(Advices, 'BeforeSetter');
-  const mockAfterSetter = sandbox.spy(Advices, 'AfterSetter');
-  const mockInjectable = sandbox.spy(Discovery, 'Injectable');
+export function spyOnDiscoveryModuleAnnotations(sandbox: sinon.SinonSandbox) {
+  const spyBefore = sandbox.spy(Advices, 'Before');
+  const spyAfter = sandbox.spy(Advices, 'After');
+  const spyAfterThrow = sandbox.spy(Advices, 'AfterThrow');
+  const spyBeforeSetter = sandbox.spy(Advices, 'BeforeSetter');
+  const spyAfterSetter = sandbox.spy(Advices, 'AfterSetter');
+  const spyInjectable = sandbox.spy(Discovery, 'Injectable');
 
   return {
-    mockInjectable,
-    mockBefore,
-    mockBeforeSetter,
-    mockAfter,
-    mockAfterSetter,
-    mockAfterThrow,
+    spyInjectable,
+    spyBefore,
+    spyBeforeSetter,
+    spyAfter,
+    spyAfterSetter,
+    spyAfterThrow,
   };
 }
