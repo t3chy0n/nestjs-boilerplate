@@ -11,13 +11,18 @@ import {
   takeUntil,
   using,
   Subscription,
+  from,
 } from 'rxjs';
 import RxConnection from './RxConnection';
+import { Injectable } from '@libs/discovery';
+import { ILazyLoaderService } from '@libs/lazy-loader/lazy-loader-service.interface';
 
 /**
  * Factory for RxAmqpLib.
  */
+@Injectable()
 export class RxAmqpLib {
+  constructor(private readonly lazy: ILazyLoaderService) {}
   /**
    * Create a new instance of RxConnection, which wraps the amqplib Connection obj.
    *
@@ -25,7 +30,7 @@ export class RxAmqpLib {
    * @param options Custom AMQP options
    * @returns {RxConnection}
    */
-  public static newConnection(
+  public newConnection(
     options: any,
     socketOptions?: any,
   ): Observable<RxConnection> {
@@ -46,7 +51,9 @@ export class RxAmqpLib {
         });
         // New RxConnection stream
 
-        const sourceConnection = of(new RxConnection(conn));
+        const sourceConnection = of(
+          this.lazy.resolveBean(RxConnection, conn),
+        );
         // Stream of close events from connection
         const closeEvents = fromEvent(conn, 'close').pipe(
           mergeMap((error: any) => throwError(error)),

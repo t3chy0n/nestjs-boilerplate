@@ -10,10 +10,10 @@ import {
 import { ConfigValueWrongTypeException } from '@libs/configuration/exceptions/config-value-wrong-type.exception';
 import {
   spyOnDiscoveryModuleAnnotations,
-  wireTestProxy,
-} from '@libs/discovery/decorators/test';
+  wireBeanProxy,
+} from '@libs/testing/test';
 import { IsDefined, IsNumber, IsString } from 'class-validator';
-import { expect, sharedSandbox } from '@utils/test-utils';
+import { expect, sharedSandbox } from '@libs/testing/test-utils';
 import { assert } from 'chai';
 
 describe('Annotated Configuration class', () => {
@@ -47,7 +47,7 @@ describe('Annotated Configuration class', () => {
         testProperty: string;
       }
 
-      const instance = wireTestProxy(Test, { config: mockConfig });
+      const instance = wireBeanProxy(Test, { config: mockConfig });
 
       expect(instance.testProperty).to.be.equal('test');
       expect(mockConfig.get).to.have.been.calledWith('configKey.testProperty');
@@ -61,7 +61,7 @@ describe('Annotated Configuration class', () => {
         testProperty: string;
       }
 
-      const instance = wireTestProxy(Test, { config: mockConfig });
+      const instance = wireBeanProxy(Test, { config: mockConfig });
 
       expect(instance.testProperty).to.be.equal('test');
       expect(mockConfig.get).to.have.been.calledWith('configKey.testProperty');
@@ -75,7 +75,7 @@ describe('Annotated Configuration class', () => {
         testProperty: string;
       }
 
-      const instance = wireTestProxy(Test, { config: mockConfig });
+      const instance = wireBeanProxy(Test, { config: mockConfig });
 
       assert.throw(() => {
         instance.testProperty;
@@ -96,7 +96,7 @@ describe('Annotated Configuration class', () => {
         testProperty: TestDto;
       }
 
-      const instance = wireTestProxy(Test, { config: mockConfig });
+      const instance = wireBeanProxy(Test, { config: mockConfig });
 
       assert.throw(() => {
         instance.testProperty;
@@ -124,7 +124,7 @@ describe('Annotated Configuration class', () => {
         testProperty: TestDto;
       }
 
-      const instance = wireTestProxy(Test, { config: mockConfig });
+      const instance = wireBeanProxy(Test, { config: mockConfig });
 
       assert.doesNotThrow(() => {
         instance.testProperty;
@@ -142,7 +142,7 @@ describe('Annotated Configuration class', () => {
         testProperty: string;
       }
 
-      const instance = wireTestProxy(Test, { config: mockConfig });
+      const instance = wireBeanProxy(Test, { config: mockConfig });
 
       expect(instance.testProperty).to.be.equal('test');
       expect(BeforeSpy.callCount).to.be.equal(1);
@@ -177,7 +177,7 @@ describe('Annotated Configuration class', () => {
       const expectedResult = 'localhost';
       (config.get as any).returns(expectedResult);
 
-      const dbConfig = wireTestProxy(DatabaseConfig, { config });
+      const dbConfig = wireBeanProxy(DatabaseConfig, { config });
 
       expect(dbConfig.host).to.be.equal(expectedResult);
       expect(config.get).to.have.been.calledWith('host');
@@ -188,7 +188,7 @@ describe('Annotated Configuration class', () => {
       (config.get as any).withArgs('host').returns(expectedResult.host);
       (config.get as any).withArgs('port').returns(expectedResult.port);
 
-      const dbConfig = wireTestProxy(DatabaseConfig, { config });
+      const dbConfig = wireBeanProxy(DatabaseConfig, { config });
 
       expect(dbConfig.host).to.be.equal(expectedResult.host);
       expect(dbConfig.port).to.be.equal(expectedResult.port);
@@ -200,7 +200,7 @@ describe('Annotated Configuration class', () => {
       const expectedResult = 'localhost';
       (config.get as any).returns(expectedResult);
 
-      const dbConfig = wireTestProxy(DatabaseConfig, { config });
+      const dbConfig = wireBeanProxy(DatabaseConfig, { config });
       assert.throw(() => {
         dbConfig.port;
       }, ConfigValueWrongTypeException);
@@ -211,7 +211,7 @@ describe('Annotated Configuration class', () => {
       (config.get as any).withArgs('host').returns(expectedResult.host);
       (config.get as any).withArgs('port').returns(expectedResult.port);
 
-      const dbConfig = wireTestProxy(DatabaseConfig, { config });
+      const dbConfig = wireBeanProxy(DatabaseConfig, { config });
 
       assert.doesNotThrow(() => {
         dbConfig.host;
@@ -231,7 +231,7 @@ describe('Annotated Configuration class', () => {
         database: DatabaseConfig;
       }
 
-      const appConfig = wireTestProxy(AppConfig, { config });
+      const appConfig = wireBeanProxy(AppConfig, { config });
       expect(appConfig.database.host).to.be.equal(expectedResult.host);
       expect(config.get).to.have.been.calledWith('db.database');
     });
@@ -246,7 +246,7 @@ describe('Annotated Configuration class', () => {
         env: string;
       }
 
-      const bootstrapConfigClass = wireTestProxy(BootstrapConfigClass, {
+      const bootstrapConfigClass = wireBeanProxy(BootstrapConfigClass, {
         config: bootstrapConfig,
       });
 
@@ -272,7 +272,7 @@ describe('Annotated Configuration class', () => {
         @ConfigProperty()
         testProperty: string;
       }
-      const target = wireTestProxy(TestClass, { config });
+      const target = wireBeanProxy(TestClass, { config });
 
       const value = 'testValue';
       const configKey = 'testProperty';
@@ -290,7 +290,7 @@ describe('Annotated Configuration class', () => {
         testProperty: number;
       }
 
-      const target = wireTestProxy(TestClass, { config });
+      const target = wireBeanProxy(TestClass, { config });
       const value = 42;
       const configKey = 'myKey';
       (config.get as any).returns(value);
@@ -307,7 +307,7 @@ describe('Annotated Configuration class', () => {
         testProperty: number;
       }
 
-      const target = wireTestProxy(TestClass, { config });
+      const target = wireBeanProxy(TestClass, { config });
 
       const key = 'testKey';
       const value = 'not a number';
@@ -329,7 +329,7 @@ describe('Annotated Configuration class', () => {
         testProperty: TestNested;
       }
 
-      const target = wireTestProxy(TestClass, { config });
+      const target = wireBeanProxy(TestClass, { config });
 
       const key = 'testKey';
       const value = { name: 123 }; // should be a string

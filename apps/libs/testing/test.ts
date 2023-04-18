@@ -3,10 +3,16 @@ import { AnyConstructor } from '@libs/lazy-loader/types';
 import * as Advices from '@libs/discovery/decorators/advices.decorators';
 import * as Discovery from '@libs/discovery/decorators/injectable.decorator';
 import * as sinon from 'sinon';
+import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 
-export const wireTestProxy = (Ctor: AnyConstructor<any>, inject, ...arg) => {
+export const wireBeanProxy = (
+  Ctor: AnyConstructor<any>,
+  inject,
+  externalContextCreator: ExternalContextCreator = null,
+  ...arg
+) => {
   const instance = new Ctor(...arg);
-  const bean = new Bean(Ctor, inject);
+  const bean = new Bean(Ctor, inject, externalContextCreator);
   bean.setInstance(instance);
   return bean.createProxy();
 };

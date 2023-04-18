@@ -4,7 +4,7 @@ import { IBootstrapConfiguration } from '../../interfaces/configuration.interfac
 import { BootstrapConfigurationAdapter } from '../../bootstrap-configuration.adapter';
 import { ConfigServerConfiguration } from './config-server.configuration';
 import { EnvDriver } from '../env.driver';
-import { expect, sharedSandbox } from '@utils/test-utils';
+import { expect, sharedSandbox } from '@libs/testing/test-utils';
 
 describe('config-server Configuration', () => {
   let config: IBootstrapConfiguration;

@@ -1,5 +1,5 @@
 import { createArrayProxy } from '@libs/proxy/array.proxy';
-import {expect} from "@utils/test-utils";
+import {expect} from "@libs/testing/test-utils";
 import {assert} from "chai";
 
 describe('createArrayProxy', () => {

@@ -1,6 +1,6 @@
 import { HttpException } from './http.exception';
 import { HttpStatus } from '@nestjs/common';
-import { expect } from '@utils/test-utils';
+import { expect } from '@libs/testing/test-utils';
 
 class TestTranslatedException extends HttpException {
   translatedMessage = 'error.DEFAULT';

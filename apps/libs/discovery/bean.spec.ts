@@ -7,11 +7,19 @@ import {
   ADVICES_SETTER_BEFORE,
 } from '@libs/discovery/const';
 import { AnyConstructor } from '@libs/lazy-loader/types';
-import { expect } from '@utils/test-utils';
+import { expect, sharedSandbox } from '@libs/testing/test-utils';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
+import { Before, UseExternalContext } from '@libs/discovery/decorators';
+import {
+  ExternalContextCreator,
+  ParamsFactory,
+} from '@nestjs/core/helpers/external-context-creator';
+import { ParamData } from '@nestjs/common';
+import { wireBeanProxy } from '@libs/testing/test';
 
 describe('Bean', () => {
+  const sandbox = sharedSandbox();
   class TestClass {
     public testField = 'testField';
 
@@ -334,5 +342,43 @@ describe('Bean', () => {
     });
 
     // Add more test cases for different scenarios
+  });
+  describe('ExternalContextCreate', () => {
+    let bean;
+    let externalContextCreatorStub: ExternalContextCreator;
+    class TestParamFactory implements ParamsFactory {
+      exchangeKeyForValue(type: number, data: ParamData, args: any): any {
+        return;
+      }
+    }
+    @UseExternalContext(TestParamFactory)
+    class TestClass {
+      public testField = 'testField';
+
+      public async testMethod(d?: string) {
+        return `testMethod ${d}`;
+      }
+    }
+
+    beforeEach(() => {
+      externalContextCreatorStub = {
+        create: sandbox.stub(),
+      } as any;
+
+      Reflect.defineMetadata(
+        ADVICES_AFTER,
+        { testMethod: [sinon.stub()] },
+        TestClass.prototype,
+      );
+      bean = wireBeanProxy(TestClass, {}, externalContextCreatorStub);
+
+    });
+
+    it('should be used when proper metadata is detected', () => {
+      const res = bean.testMethod("asd");
+      expect((externalContextCreatorStub.create as any).callCount).to.be.equal(
+        1,
+      );
+    });
   });
 });

@@ -25,9 +25,12 @@ import { MessagingConfiguration } from '@libs/messaging/messaging.configuration'
 import { ILogger } from '@libs/logger/logger.interface';
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 import { catchError } from 'rxjs/operators';
-import { Injectable } from '@nestjs/common';
+import { Traced } from '@libs/telemetry/decorators/traced.decorator';
+import { NonInjectable } from '@libs/discovery';
+import { Inject } from '@nestjs/common';
 
-@Injectable()
+@NonInjectable()
+@Traced
 export class RabbitmqConnection implements IMessagingConnection {
   public readonly driver: MessagingDriver = MessagingDriver.RABBITMQ;
   public readonly name: string;
@@ -43,15 +46,18 @@ export class RabbitmqConnection implements IMessagingConnection {
     private readonly socketOptions: any,
     private readonly config: MessagingConfiguration,
     private readonly logger: ILogger,
+    private readonly connectionFactory: RxAmqpLib,
   ) {
-    this.connection$ = RxAmqpLib.newConnection(configData, socketOptions).pipe(
-      mergeMap((connection) => {
-        return connection.createChannel();
-      }),
-      tap(() => this.logger.log('Rabbitmq connection created.')),
-    );
+    this.connection$ = connectionFactory
+      .newConnection(configData, socketOptions)
+      .pipe(
+        mergeMap((connection) => {
+          return connection.createChannel();
+        }),
+        tap(() => this.logger.log('Rabbitmq connection created.')),
+      );
 
-    this.name = configData.name;
+    this.name = configData?.name;
   }
 
   addIncoming(dto: ChannelConfigurationDto) {

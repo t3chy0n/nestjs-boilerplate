@@ -6,7 +6,7 @@ import { Lazy } from './lazy';
 import { LoggerModule } from '../logger/logger.module';
 import { ConfigurationModule } from '../configuration/configuration.module';
 import * as sinon from 'sinon';
-import { expect } from '@utils/test-utils';
+import { expect } from '@libs/testing/test-utils';
 
 @Injectable()
 class SubjectDependency {

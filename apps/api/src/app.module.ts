@@ -25,8 +25,9 @@ import {TelemetryModule} from "@libs/telemetry/telemetry.module";
 const modules: any[] = [
   DbModule,
   // FlinkFunctionsModule,
-  MessagingModule.forRoot(),
   RequestContextModule,
+  TelemetryModule,
+  MessagingModule.forRoot(),
   ExceptionsModule.forRoot(),
   TypeOrmModule.forRootAsync({
     useFactory: (factory: PostgresDBConfigurationFactory) => factory.create(),
@@ -37,7 +38,6 @@ const modules: any[] = [
   ProfilesModule,
   LoggerModule,
   ConfigurationModule,
-  TelemetryModule,
 ];
 
 if (process.env.NODE_ENV !== 'production') {

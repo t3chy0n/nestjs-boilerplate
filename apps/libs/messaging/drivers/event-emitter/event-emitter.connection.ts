@@ -24,10 +24,14 @@ import RxEventEmitterLib from '@libs/messaging/drivers/event-emitter/rx/event-em
 import { RxChannel } from '@libs/messaging/drivers/event-emitter/rx/channel.rx';
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 import { Injectable } from '@nestjs/common';
+import {Traced} from "@libs/telemetry/decorators/traced.decorator";
+import {NonInjectable} from "@libs/discovery";
 
 const RETRY_AFTER = 2000;
 
-@Injectable()
+
+@NonInjectable()
+@Traced
 export class EventEmitterConnection implements IMessagingConnection {
   public readonly driver: MessagingDriver = MessagingDriver.MEMORY;
   public readonly name: string;

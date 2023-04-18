@@ -1,4 +1,4 @@
-export const MESSAGING_ARGS_METADATA_KEY = 'Messaging.args.metadata';
+
 export const INCOMMING_METADATA_KEY = 'Messaging.incomming.metadata';
 export const DRIVER_METADATA_KEY = 'Messaging.driver.metadata';
 export const OUTGOING_METADATA_KEY = 'Messaging.publisher.metadata';

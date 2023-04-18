@@ -33,6 +33,7 @@ import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
 import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
 import { Traced } from '@libs/telemetry/decorators/traced.decorator';
+import {MessagingController} from "@libs/messaging/decorators";
 
 class Inner {
   @IsDefined()
@@ -76,7 +77,7 @@ export class TestConfig {
 
 @Injectable()
 @Traced
-
+@MessagingController()
 // @UsePipes(new ValidationPipe({ transform: true }))
 export class AppService {
   constructor(private readonly config: TestConfig) {
@@ -117,7 +118,7 @@ export class AppService {
   }
 
   @Incoming('test_outgoing_message')
-  @Outgoing('test_outgoing_message2')
+  @Outgoing('test_outgoing_message5')
   getHello2(
     @Message() msg: TestDto,
     @IncomingConfiguration() msg2: Payload,
@@ -140,7 +141,7 @@ export class AppService {
     return 'Hello World!';
   }
 
-  @Outgoing('test_outgoing_message5')
+  // @Outgoing('test_outgoing_message5')
   getHello5(msg: string) {
     return msg;
   }

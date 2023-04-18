@@ -9,6 +9,9 @@ import {
   PROPERTY_DEPS_METADATA,
   SELF_DECLARED_DEPS_METADATA,
 } from '@nestjs/common/constants';
+import { DependencyIndex } from '@libs/discovery/utils';
+import { Bean } from '@libs/discovery/bean';
+import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 
 @Injectable()
 export class LazyLoader implements ILazyLoaderService {
@@ -16,14 +19,19 @@ export class LazyLoader implements ILazyLoaderService {
   private readonly logger = new Logger(LazyLoader.name);
 
   private toLazyLoad: Lazy<any>[] = [];
-  constructor(private readonly moduleRef: ModuleRef) {
+  private lateBeans: any[] = [];
+
+  constructor(
+    private readonly moduleRef: ModuleRef,
+    private readonly externalContextCreator: ExternalContextCreator,
+  ) {
     this.contextId = ContextIdFactory.create();
   }
 
   /***
    * Instantiates lazy providers when module is initialized
    */
-  async onModuleInit() {
+  async onApplicationBootstrap() {
     for (const lazy of this.toLazyLoad) {
       const instance = await this.create(
         lazy.clazz,
@@ -33,7 +41,6 @@ export class LazyLoader implements ILazyLoaderService {
     }
     this.toLazyLoad = [];
   }
-
   /***
    * Creates proxy to lazy object, allows overriding of depedencies at creation level
    * @param clazz
@@ -57,6 +64,35 @@ export class LazyLoader implements ILazyLoaderService {
       },
     });
     return res as T;
+  }
+
+  resolveBean<T>(
+    clazz: AnyConstructor<T>,
+    ...args: any[]
+  ): T {
+    const instance = this.create(clazz, ...args);
+    const depIndex = new DependencyIndex(clazz);
+
+    try {
+      const resolved = depIndex.getArray().map((dep) =>
+        this.moduleRef.get(
+          //Either resolve injection token, or constructor dependency type passed
+          dep,
+          {
+            strict: false,
+          },
+        ),
+      );
+
+
+      const toInject = depIndex.remapDepsToObject(resolved);
+      const bean = new Bean(clazz, toInject, this.externalContextCreator);
+      bean.setInstance(instance);
+
+      return bean.createProxy() as T;
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   async resolve<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T> {

@@ -3,7 +3,9 @@ import { getDecoratorCallerPath } from '@libs/discovery/utils';
 import { AllInjectables } from '@libs/discovery/registry';
 import {
   INJECTABLE_WATERMARK,
+  PROPERTY_DEPS_METADATA,
   SCOPE_OPTIONS_METADATA,
+  SELF_DECLARED_DEPS_METADATA,
 } from '@nestjs/common/constants';
 import { InjectFactory, PROXY_INJECT_DEPS } from '@libs/discovery/const';
 
@@ -18,6 +20,13 @@ export function Injectable(
 
     AllInjectables[index] = target;
     Reflect.defineMetadata(INJECTABLE_WATERMARK, true, constructor);
+
+    const oldOptions = Reflect.getMetadata(SCOPE_OPTIONS_METADATA, target);
+    Reflect.defineMetadata(
+      SCOPE_OPTIONS_METADATA,
+      { ...oldOptions, ...options },
+      target,
+    );
     const deps = Reflect.getMetadata(PROXY_INJECT_DEPS, constructor) || {};
     Reflect.defineMetadata(
       PROXY_INJECT_DEPS,

@@ -1,18 +1,27 @@
 import { Channel, ConfirmChannel, Connection, Options } from 'amqplib';
-import { Observable, from, map } from 'rxjs';
+import { Observable, from, map, switchMap } from 'rxjs';
 import RxChannel from './RxChannel';
+import { NonInjectable } from '@libs/discovery';
+import { Traced } from '@libs/telemetry/decorators/traced.decorator';
+import { ILazyLoaderService } from '@libs/lazy-loader/lazy-loader-service.interface';
 // import RxConfirmChannel from './RxConfirmChannel';
 
 /**
  * Connection to AMQP server.
  */
+@NonInjectable()
+@Traced
 export class RxConnection {
   /**
    * Class constructor
    *
    * @param connection
+   * @param lazy
    */
-  constructor(private connection: Connection) {}
+  constructor(
+    private connection: Connection,
+    private readonly lazy: ILazyLoaderService,
+  ) {}
 
   /**
    * Opens a channel. May fail if there are no more channels available.
@@ -21,7 +30,9 @@ export class RxConnection {
    */
   public createChannel(): Observable<RxChannel> {
     return from(this.connection.createChannel()).pipe(
-      map((channel: Channel) => new RxChannel(channel)),
+      map((channel: Channel) =>
+        this.lazy.resolveBean(RxChannel, channel),
+      ),
     );
   }
 

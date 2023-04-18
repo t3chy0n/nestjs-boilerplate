@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getCommonPath } from '@libs/discovery/get-common-path';
-import { expect } from '@utils/test-utils';
+import { expect } from '@libs/testing/test-utils';
 
 describe('Get Common Path', () => {
   it('should return the correct common folder path for two simple paths', () => {

@@ -14,7 +14,7 @@ enum Severity {
   VERBOSE = 'verbose',
 }
 
-@Injectable({ scope: Scope.TRANSIENT })
+@Injectable()
 export class LoggerService implements ILogger {
   severities: string[];
   private source: string;
@@ -24,7 +24,7 @@ export class LoggerService implements ILogger {
     private readonly config: IConfiguration,
   ) {
     this.source =
-      typeof source === 'string' ? source : source?.constructor?.name;
+      typeof source === 'string' ? source : source?.constructor?.name ?? "Logger";
     const defaultSeverities = Object.values(Severity);
     this.severities = this.config.get<Severity[]>(
       Config.Logger.Severities,
@@ -42,7 +42,7 @@ export class LoggerService implements ILogger {
       return;
     }
     this.drivers.forEach((d: ConsoleLogger) =>
-      d.log(message, ...this.stringify(optionalParams), this.source),
+      d.log(message, ...this.stringify(optionalParams), this.source ),
     );
   }
 

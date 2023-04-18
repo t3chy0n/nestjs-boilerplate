@@ -16,10 +16,15 @@ import DeleteQueueReply from './reply/DeleteQueueReply';
 import EmptyReply from './reply/EmptyReply';
 import PurgeQueueReply from './reply/PurgeQueueReply';
 import RxMessage from './RxMessage';
+import { NonInjectable } from '@libs/discovery';
+import { Traced } from '@libs/telemetry/decorators/traced.decorator';
 
 /**
  * AMQP Rx Channel
  */
+
+@NonInjectable()
+@Traced
 export class RxChannel {
   /**
    * Class constructor.

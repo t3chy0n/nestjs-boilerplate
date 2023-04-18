@@ -1,13 +1,13 @@
 import { Traced } from './traced.decorator';
 
 import { ADVICES_ENSURE_PARENT_IMPORTS } from '@libs/discovery/const';
-import { expect, sharedSandbox } from '@utils/test-utils';
+import { expect, sharedSandbox } from '@libs/testing/test-utils';
 import { JaegerTracerDriver } from '@libs/telemetry/drivers/jaeger/tracer.driver';
 import { Span } from '@opentelemetry/api/build/src/trace/span';
 import {
   spyOnDiscoveryModuleAnnotations,
-  wireTestProxy,
-} from '@libs/discovery/decorators/test';
+  wireBeanProxy,
+} from '@libs/testing/test';
 import { assert } from 'chai';
 
 describe('Traced', () => {
@@ -68,7 +68,7 @@ describe('Traced', () => {
           myField3 = 123;
         }
 
-        const instance = wireTestProxy(TestClass, { tracer });
+        const instance = wireBeanProxy(TestClass, { tracer });
 
         const moduleImports = Reflect.getMetadata(
           ADVICES_ENSURE_PARENT_IMPORTS,
@@ -95,7 +95,7 @@ describe('Traced', () => {
           myField = 123;
         }
 
-        const instance = wireTestProxy(TestClass, { tracer });
+        const instance = wireBeanProxy(TestClass, { tracer });
         const methods = Object.getOwnPropertyNames(TestClass.prototype).filter(
           (prop) =>
             typeof instance[prop] === 'function' && prop !== 'constructor',
@@ -142,7 +142,7 @@ describe('Traced', () => {
           myMethod2() {}
         }
 
-        const instance = wireTestProxy(TestClass, { tracer });
+        const instance = wireBeanProxy(TestClass, { tracer });
         instance.myMethod();
 
         expect((spanStub.end as any).callCount).to.be.equal(1);
@@ -158,7 +158,7 @@ describe('Traced', () => {
             }
           }
 
-          const instance = wireTestProxy(TestClass, { tracer });
+          const instance = wireBeanProxy(TestClass, { tracer });
 
           assert.throw(() => {
             instance.myMethod();
@@ -174,7 +174,7 @@ describe('Traced', () => {
           );
           expect((spanStub.end as any).callCount).to.be.equal(1);
         });
-        it('should handle trace from async method', async () => {
+        it('should trace from async method', async () => {
           const subjectError = new Error('Test');
           class TestClass {
             @Traced
@@ -183,7 +183,7 @@ describe('Traced', () => {
             }
           }
 
-          const instance = wireTestProxy(TestClass, { tracer });
+          const instance = wireBeanProxy(TestClass, { tracer });
 
           let caughtError;
           try {

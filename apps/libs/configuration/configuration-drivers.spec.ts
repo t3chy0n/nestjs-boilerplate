@@ -26,7 +26,7 @@ import { IBootstrapConfigurationFactory } from './interfaces/bootstrap-configura
 import { BootstrapConfigurationFactory } from './bootsrap-configuration.factory';
 
 import { DiscoveryModule } from '@golevelup/nestjs-discovery';
-import { expect, sharedSandbox } from '@utils/test-utils';
+import { expect, sharedSandbox } from '@libs/testing/test-utils';
 
 describe('Configuration Drivers', () => {
   const sandbox = sharedSandbox();

@@ -1,11 +1,16 @@
 import { AbstractMessageDto } from '@libs/messaging/dto/abstract-message.dto';
 import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discovery.interfaces';
 import { Subject } from 'rxjs';
+import { NonInjectable } from '@libs/discovery';
+import { Traced } from '@libs/telemetry/decorators/traced.decorator';
 
 enum ChannelDirection {
   IN = 'in',
   OUT = 'out',
 }
+
+@NonInjectable()
+@Traced
 export class ChannelConfigurationDto {
   public routingKeys: string[] = [];
   public topic: string;
@@ -23,13 +28,12 @@ export class ChannelConfigurationDto {
   public publicator$: Subject<any> = new Subject<any>();
 
   constructor(params: Partial<ChannelConfigurationDto> = {}) {
-    Object.assign(this, params);
+    const mapped = this.toDto(params);
+    Object.assign(this, mapped);
   }
 
-  static toDto(discoveredMethod: DiscoveredMethodWithMeta<any>, config: any) {
-    const { meta } = discoveredMethod;
-
-    return new ChannelConfigurationDto({
+  toDto(config: any) {
+    return {
       queue: config.queue?.name,
       exchange: config.exchange?.name,
       exchangeType: config.exchange?.type,
@@ -39,6 +43,6 @@ export class ChannelConfigurationDto {
       event: config.event,
       queueDurable: config.queueDurable,
       acknowledgements: config.acknowledgements,
-    });
+    };
   }
 }

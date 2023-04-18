@@ -1,7 +1,7 @@
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
 
 export abstract class IMessagingConnectionFactory {
-  abstract create(): Promise<IMessagingConnection>[];
+  abstract create(): Promise<IMessagingConnection[]>;
 }
 
 export abstract class IRabbitMqConnectionFactory extends IMessagingConnectionFactory {}

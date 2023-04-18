@@ -11,12 +11,13 @@ import {
 } from '@nestjs/common/constants';
 import { pairs } from '@libs/iterators';
 import {
-  FACTORY_USED_METHOD_NAME,
   ADVICES_BELONGS_TO,
   ADVICES_ENSURE_PARENT_IMPORTS,
+  FACTORY_USED_METHOD_NAME,
   PROXY_INJECT_DEPS,
 } from '@libs/discovery/const';
 import { Bean } from '@libs/discovery/bean';
+import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 
 type ScoredModuleAssignment = {
   module: any;
@@ -44,13 +45,13 @@ export function getDecoratorCallerPath() {
   return stack[1];
 }
 
-class DependencyIndex {
+export class DependencyIndex {
   private dependencies;
   private enumeratedDeps: any[] = [];
   private depsArray: any[] = [];
 
   constructor(private readonly target: any) {
-    this.dependencies = Reflect.getMetadata(PROXY_INJECT_DEPS, target);
+    this.dependencies = Reflect.getMetadata(PROXY_INJECT_DEPS, target) || [];
     const keys = Object.keys(this.dependencies);
 
     for (const k of keys) {
@@ -114,26 +115,46 @@ export const moduleAutoMatch = () => {
     const instanceToken = Symbol(`AUTO_DISCOVERY_${injectable.name}`);
 
     const dependencyIndex = new DependencyIndex(injectable);
+
+    if (!options.nonInjectable) {
+      providers.push({
+        provide: instanceToken,
+        useClass: injectable,
+      });
+      providers.push({
+        provide: options?.provide ?? injectable,
+        useFactory: async (...args) => {
+          const [instance, externalContextCreator, ...rest] = args;
+          const depObject = dependencyIndex.remapDepsToObject(rest);
+          const bean = new Bean(injectable, depObject, externalContextCreator);
+          await bean.setInstance(instance);
+          return bean.createProxy();
+        },
+        inject: [
+          instanceToken,
+          ExternalContextCreator,
+          ...dependencyIndex.getArray(),
+        ],
+      });
+    } else {
+      logger.warn(`${injectable.name} is non injectable.`);
+      const factoryName = `${injectable.name}BeanInjectables`;
+      providers.push({
+        provide: factoryName,
+        useFactory: (...args) => {
+          console.log(` ${factoryName} was created for a non injectible class`);
+
+          return () => {
+            return args;
+          };
+        },
+        inject: dependencyIndex.getArray(),
+      });
+    }
+
     Reflect.defineMetadata(
       MODULE_METADATA.PROVIDERS,
-      [
-        ...providers,
-        {
-          provide: instanceToken,
-          useClass: injectable,
-        },
-        {
-          provide: injectable,
-          useFactory: async (...args) => {
-            const [instance, ...rest] = args;
-            const depObject = dependencyIndex.remapDepsToObject(rest);
-            const bean = new Bean(injectable, depObject);
-            await bean.setInstance(instance);
-            return bean.createProxy();
-          },
-          inject: [instanceToken, ...dependencyIndex.getArray()],
-        },
-      ],
+      [...providers],
       matchedModule,
     );
   }
@@ -161,35 +182,88 @@ export const moduleAutoMatch = () => {
       uniqueImports,
       matchedModule,
     );
-
-    const method = Reflect.getMetadata(FACTORY_USED_METHOD_NAME, injectable);
-    const options = Reflect.getMetadata(SCOPE_OPTIONS_METADATA, injectable);
-
-    const dependencyIndex = new DependencyIndex(injectable.constructor);
-    Reflect.defineMetadata(
-      MODULE_METADATA.PROVIDERS,
-      [
-        ...providers,
-        {
-          provide: options.provide,
-          useFactory: async (...args) => {
-            const [factory, ...rest] = args;
-            if (!factory[method]) {
-              throw new Error('Factory method is not defined');
-            }
-
-            const instance = await factory[method].call(factory);
-            const depObject = dependencyIndex.remapDepsToObject(rest);
-            const bean = new Bean(instance.constructor, depObject);
-            await bean.setInstance(instance);
-            return bean.createProxy();
-          },
-          inject: [injectable.constructor, ...dependencyIndex.getArray()],
-        },
-      ],
-      matchedModule,
+    const classOptions = Reflect.getMetadata(
+      SCOPE_OPTIONS_METADATA,
+      injectable.constructor,
     );
+
+    for (const key of Reflect.ownKeys(injectable)) {
+      const method = Reflect.getMetadata(
+        FACTORY_USED_METHOD_NAME,
+        injectable[key],
+      );
+      const options = Reflect.getMetadata(
+        SCOPE_OPTIONS_METADATA,
+        injectable[key],
+      );
+
+      if (!method) {
+        continue;
+      }
+      const dependencyIndex = new DependencyIndex(injectable.constructor);
+      Reflect.defineMetadata(
+        MODULE_METADATA.PROVIDERS,
+        [
+          ...providers,
+          {
+            provide: options.provide,
+            useFactory: async (...args) => {
+              const [factory, externalContextCreator, ...rest] = args;
+              if (!factory[method]) {
+                throw new Error('Factory method is not defined');
+              }
+
+              const instance = await factory[method].call(factory);
+              if (Array.isArray(instance)) {
+                return instance;
+              }
+              const depObject = dependencyIndex.remapDepsToObject(rest);
+              const bean = new Bean(
+                instance.constructor,
+                depObject,
+                externalContextCreator,
+              );
+              await bean.setInstance(instance);
+              return bean.createProxy();
+            },
+            inject: [
+              classOptions?.provide ?? injectable.constructor,
+              ExternalContextCreator,
+              ...dependencyIndex.getArray(),
+            ],
+          },
+        ],
+        matchedModule,
+      );
+    }
   }
 
   logger.log('Auto matched modules');
 };
+
+/**
+ * Function that returns a new decorator that applies all decorators provided by param
+ *
+ * Useful to build new decorators (or a decorator factory) encapsulating multiple decorators related with the same feature
+ *
+ * @param decorators one or more decorators (e.g., `ApplyGuard(...)`)
+ *
+ * @publicApi
+ */
+export function applyDecorators(
+  ...decorators: Array<ClassDecorator | MethodDecorator | PropertyDecorator>
+) {
+  return <TFunction extends Function, Y>(
+    target: TFunction | object,
+    propertyKey?: string | symbol,
+    descriptor?: TypedPropertyDescriptor<Y>,
+  ) => {
+    for (const decorator of decorators) {
+      (decorator as MethodDecorator | PropertyDecorator)(
+        target,
+        propertyKey,
+        descriptor,
+      );
+    }
+  };
+}

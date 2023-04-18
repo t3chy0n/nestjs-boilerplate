@@ -11,6 +11,13 @@ export abstract class ILazyLoaderService {
   abstract lazyCreate<T>(clazz: AnyConstructor<T>, ...args: any[]): Promise<T>;
 
   /***
+   * Async resolves a bean and creates a proxy to instance
+   *
+   * @param clazz
+   * @param args
+   */
+  abstract resolveBean<T>(clazz: AnyConstructor<T>, ...args: any[]): T;
+  /***
    * Async resolves all dependencies to certain instance of a class
    *
    * @param clazz

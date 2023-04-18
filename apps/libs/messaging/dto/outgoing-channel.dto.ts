@@ -13,8 +13,7 @@ export class OutgoingChannelDto {
     Object.assign(this, params);
   }
 
-  static toDto(discoveredMethod: DiscoveredMethodWithMeta<any>, config: any) {
-    const { meta } = discoveredMethod;
+  static toDto(config: any) {
 
     return new OutgoingChannelDto({
       topic: config.topic,
