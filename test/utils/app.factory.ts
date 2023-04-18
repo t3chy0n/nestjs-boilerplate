@@ -18,7 +18,7 @@ import { HttpMockClient } from './http-mock.client';
 import { ExceptionsModule } from '@libs/exceptions/exceptions.module';
 import { IHttpExceptionFilter } from '@libs/exceptions/interfaces/http-exception-filter.interface';
 import faker from '@faker-js/faker';
-import { getPostgresContainer } from './postgress.testcontainers';
+import { getPostgresContainer } from '@libs/testing/containers/postgress.testcontainers';
 import { LazyLoaderModule } from '@libs/lazy-loader/lazy-loader.module';
 
 const POSTGRES_PORT = 5432;
@@ -74,7 +74,7 @@ export const testAppFactory = async (
     imports: [
       HttpModule,
       RequestContextModule,
-      LoggerModule.forTests(false),
+      LoggerModule,
       LazyLoaderModule.forRoot(),
       ConfigurationModule.forTests(),
       SeederModule.forE2ETests(),

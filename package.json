@@ -47,6 +47,7 @@
     "@nestjs/typeorm": "^9.0.1",
     "@opentelemetry/api": "^1.4.1",
     "@opentelemetry/exporter-jaeger": "^1.11.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.38.0",
     "@opentelemetry/instrumentation": "^0.37.0",
     "@opentelemetry/instrumentation-amqplib": "^0.32.2",
     "@opentelemetry/instrumentation-express": "^0.32.1",

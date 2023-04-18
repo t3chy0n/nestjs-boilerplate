@@ -7,7 +7,7 @@ config-server:
 
 tracing:
   jaeger:
-    endpoint: http://localhost:14268/api/traces
+    endpoint: http://localhost:4318/v1/traces
 
 messaging:
   connections:
@@ -16,6 +16,12 @@ messaging:
 
     rabbitmq:
       - name: default
+        protocol: 'amqp'
+        port: 5672
+        username: 'user'
+        password: 'bitnami'
+        hostname: 'localhost'
+      - name: default2
         protocol: 'amqp'
         port: 5672
         username: 'user'
@@ -73,6 +79,7 @@ messaging:
   incoming:
     test_outgoing_message:
       driver: rabbitmq
+      name: default
       routingKeys:
         - routing.key1
 
@@ -84,6 +91,7 @@ messaging:
 
     test_outgoing_message2:
       driver: rabbitmq
+      name: default2
       routingKeys:
         - routing.key2
 
@@ -115,7 +123,10 @@ messaging:
       topic: "kafka-topic"
 
     test_outgoing_message4:
-      driver: memory
+      driver: rabbitmq
+      exchange: 'test_exchange'
+      routingKey: routing.key3
+
 
     test_outgoing_message5:
       driver: memory
