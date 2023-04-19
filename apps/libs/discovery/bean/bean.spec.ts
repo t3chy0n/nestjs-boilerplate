@@ -98,26 +98,26 @@ describe('Bean', () => {
       }
 
       beforeEach(() => {
-        adviceBefore = sinon.stub();
-        adviceAfter = sinon.stub();
+        adviceBefore = sandbox.stub();
+        adviceAfter = sandbox.stub();
 
-        adviceBeforeSetter = sinon.stub();
-        adviceAfterSetter = sinon.stub();
-        adviceAfterThrow = sinon.stub();
+        adviceBeforeSetter = sandbox.stub();
+        adviceAfterSetter = sandbox.stub();
+        adviceAfterThrow = sandbox.stub();
 
         Reflect.defineMetadata(
           ADVICES_BEFORE,
-          { testMethod: [adviceBefore] },
+          { testMethod: [adviceBefore], testField: [adviceBefore] },
           TestClassWithAdvices.prototype,
         );
         Reflect.defineMetadata(
           ADVICES_AFTER,
-          { testMethod: [adviceAfter] },
+          { testMethod: [adviceAfter], testField: [adviceAfter] },
           TestClassWithAdvices.prototype,
         );
         Reflect.defineMetadata(
           ADVICES_AFTER_THROW,
-          { testMethod: [adviceAfterThrow] },
+          { testMethod: [adviceAfterThrow], testField: [adviceAfterThrow] },
           TestClassWithAdvices.prototype,
         );
 
@@ -129,9 +129,12 @@ describe('Bean', () => {
         bean.setInstance(testInstance);
         bean.setInjected({});
         const proxy: any = bean.createProxy();
-        const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
-        const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
-        const wireFieldAdvicesSpy = sinon.spy(bean, 'wireFieldAdvices');
+        const wireMethodAdvicesSpy = sandbox.spy(bean, 'wireMethodAdvices');
+        const wireExceptionAdvicesSpy = sandbox.spy(
+          bean,
+          'wireExceptionAdvices',
+        );
+        const wireFieldAdvicesSpy = sandbox.spy(bean, 'wireFieldAdvices');
 
         const result = await proxy.testMethod('example');
 
@@ -142,8 +145,26 @@ describe('Bean', () => {
 
         expect(adviceBefore.callCount).to.be.equal(1);
         expect(adviceAfter.callCount).to.be.equal(1);
-        expect(adviceBeforeSetter.callCount).to.be.equal(0);
-        expect(adviceAfterSetter.callCount).to.be.equal(0);
+        expect(adviceAfterThrow.callCount).to.be.equal(0);
+      });
+
+      it('should call before and after advices when invoking the field', async () => {
+        bean.setInstance(testInstance);
+        bean.setInjected({});
+        const proxy: any = bean.createProxy();
+        const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
+        const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
+        const wireFieldAdvicesSpy = sinon.spy(bean, 'wireFieldAdvices');
+
+        const result = proxy.testField;
+
+        expect(wireMethodAdvicesSpy.callCount).to.be.equal(0);
+        expect(wireExceptionAdvicesSpy.callCount).to.be.equal(0);
+        expect(wireFieldAdvicesSpy.callCount).to.be.equal(1);
+        expect(result).to.be.equal('testField');
+
+        expect(adviceBefore.callCount).to.be.equal(1);
+        expect(adviceAfter.callCount).to.be.equal(1);
         expect(adviceAfterThrow.callCount).to.be.equal(0);
       });
 

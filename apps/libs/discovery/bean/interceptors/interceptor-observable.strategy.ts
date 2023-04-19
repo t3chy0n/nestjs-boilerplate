@@ -24,6 +24,7 @@ export class InterceptorObservableStrategy {
 
     const startSpanOperator = <TSource>(): Operator<TSource> => {
       const methodFactory = this.methodFactory;
+      const handleError = this.handleError.bind(this);
       return (source) =>
         new Observable<TSource>((subscriber) => {
           return source.subscribe({
@@ -36,7 +37,7 @@ export class InterceptorObservableStrategy {
             },
             error(error) {
               subscriber.error(error);
-              this.handleError(error);
+              handleError(error);
             },
             complete() {
               subscriber.complete();

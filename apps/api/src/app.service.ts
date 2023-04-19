@@ -33,7 +33,7 @@ import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
 import { Injectable } from '@libs/discovery/decorators/injectable.decorator';
 import { Traced } from '@libs/telemetry/decorators/traced.decorator';
-import {MessagingController} from "@libs/messaging/decorators";
+import { MessagingController } from '@libs/messaging/decorators';
 
 class Inner {
   @IsDefined()
@@ -123,6 +123,7 @@ export class AppService {
     @Message() msg: TestDto,
     @IncomingConfiguration() msg2: Payload,
   ): any {
+    throw new Error('TEST ERROR RECEIVE');
     return {};
   }
 

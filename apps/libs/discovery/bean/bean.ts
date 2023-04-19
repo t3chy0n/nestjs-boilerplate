@@ -121,7 +121,7 @@ export class Bean<T> {
     const instance = this.getInstance();
     const injected = this.instanceData.getInjected();
 
-    const results = beforeCallbacks[property]
+    const results = beforeCallbacks
       ?.map((call) => call(ctx, instance, property, injected))
       .filter(Boolean) ?? [
       this.metadata.defaults[property] ?? instance[property],
@@ -138,7 +138,7 @@ export class Bean<T> {
       }
     }
 
-    afterCallbacks[property]?.forEach((call) =>
+    afterCallbacks?.forEach((call) =>
       call(ctx, instance, property, injected, res),
     );
 

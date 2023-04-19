@@ -41,9 +41,11 @@ export class HttpExceptionFilter implements IHttpExceptionFilter {
       `Exception of type ${typeof exception} needs to be instance of internal HttpException`,
     );
     this.logger.error(`Exception was thrown here: ${(exception as any).stack}`);
-    response?.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      message: (exception as Error).message,
-    });
+    if ('function' === typeof response?.status) {
+      response?.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: (exception as Error).message,
+      });
+    }
   }
 }
 
