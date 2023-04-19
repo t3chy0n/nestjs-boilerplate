@@ -35,7 +35,6 @@ export class JaegerTracerDriver extends ITracing {
   constructor(
     private readonly config: JaegerConfig,
     private readonly logger: ILogger,
-    private readonly requestContext: IRequestContextService,
   ) {
     super();
   }
@@ -95,7 +94,6 @@ export class JaegerTracerDriver extends ITracing {
       resource: resource,
     });
 
-
     const exporter = new OTLPTraceExporter();
     const processor = new BatchSpanProcessor(exporter, {
       // The maximum queue size. After the size is reached spans are dropped.
@@ -113,8 +111,8 @@ export class JaegerTracerDriver extends ITracing {
     provider.register();
     registerInstrumentations({
       instrumentations: [
-        new ExpressInstrumentation(),
-        new HttpInstrumentation(),
+        // new ExpressInstrumentation(),
+        // new HttpInstrumentation(),
         // new AmqplibInstrumentation(),
         // new KafkaJsInstrumentation({
         //   // see under for available configuration

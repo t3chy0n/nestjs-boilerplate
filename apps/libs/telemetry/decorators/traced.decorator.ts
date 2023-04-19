@@ -52,18 +52,22 @@ const TracedField = () =>
     ),
     After(
       (ctx, target, property, { tracer, requestContext }, result, ...args) => {
-        const rCtx = requestContext.getContext();
+        try {
+          const rCtx = requestContext.getContext();
 
-        //TODO: Try to serialize each parameter seperately
-        ctx.span?.setAttribute('parameters', args);
+          //TODO: Try to serialize each parameter seperately
+          ctx.span?.setAttribute('parameters', args);
 
-        ctx.span?.setAttribute('result', result);
-        ctx.span?.end();
+          ctx.span?.setAttribute('result', result);
+          ctx.span?.end();
 
-        // ctx.span?.setStatus(SpanStatusCode.OK);
-        rCtx.lastSpans?.pop();
-        requestContext.updateContext(rCtx);
-        return '';
+          // ctx.span?.setStatus(SpanStatusCode.OK);
+          rCtx.lastSpans?.pop();
+          requestContext.updateContext(rCtx);
+          return '';
+        } catch (e) {
+          console.log(e);
+        }
       },
     ),
     AfterThrow((ctx, target, property, { tracer }, exception) => {

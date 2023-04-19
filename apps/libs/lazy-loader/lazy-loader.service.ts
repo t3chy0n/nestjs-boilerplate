@@ -10,7 +10,7 @@ import {
   SELF_DECLARED_DEPS_METADATA,
 } from '@nestjs/common/constants';
 import { DependencyIndex } from '@libs/discovery/utils';
-import { Bean } from '@libs/discovery/bean';
+import { Bean } from '@libs/discovery/bean/bean';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 
 @Injectable()
@@ -66,10 +66,7 @@ export class LazyLoader implements ILazyLoaderService {
     return res as T;
   }
 
-  resolveBean<T>(
-    clazz: AnyConstructor<T>,
-    ...args: any[]
-  ): T {
+  resolveBean<T>(clazz: AnyConstructor<T>, ...args: any[]): T {
     const instance = this.create(clazz, ...args);
     const depIndex = new DependencyIndex(clazz);
 
@@ -83,7 +80,6 @@ export class LazyLoader implements ILazyLoaderService {
           },
         ),
       );
-
 
       const toInject = depIndex.remapDepsToObject(resolved);
       const bean = new Bean(clazz, toInject, this.externalContextCreator);

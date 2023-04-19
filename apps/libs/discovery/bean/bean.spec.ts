@@ -3,10 +3,7 @@ import {
   ADVICES_AFTER,
   ADVICES_AFTER_THROW,
   ADVICES_BEFORE,
-  ADVICES_SETTER_AFTER,
-  ADVICES_SETTER_BEFORE,
 } from '@libs/discovery/const';
-import { AnyConstructor } from '@libs/lazy-loader/types';
 import { expect, sharedSandbox } from '@libs/testing/test-utils';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
@@ -17,6 +14,7 @@ import {
 } from '@nestjs/core/helpers/external-context-creator';
 import { ParamData } from '@nestjs/common';
 import { wireBeanProxy } from '@libs/testing/test';
+import { InterceptorPromiseStrategy } from '@libs/discovery/bean/interceptors/interceptor-promise.strategy';
 
 describe('Bean', () => {
   const sandbox = sharedSandbox();
@@ -42,7 +40,7 @@ describe('Bean', () => {
 
   it('should set instance', async () => {
     await bean.setInstance(testInstance);
-    expect(bean['instance']).to.be.equal(testInstance);
+    expect(bean.getInstance()).to.be.equal(testInstance);
   });
 
   describe('wireMethodAdvices', () => {
@@ -122,23 +120,14 @@ describe('Bean', () => {
           { testMethod: [adviceAfterThrow] },
           TestClassWithAdvices.prototype,
         );
-        Reflect.defineMetadata(
-          ADVICES_SETTER_BEFORE,
-          { testMethod: [adviceBeforeSetter] },
-          TestClassWithAdvices.prototype,
-        );
-        Reflect.defineMetadata(
-          ADVICES_SETTER_AFTER,
-          { testMethod: [adviceAfterSetter] },
-          TestClassWithAdvices.prototype,
-        );
 
         testInstance = new TestClassWithAdvices();
         bean = new Bean(TestClassWithAdvices);
       });
 
       it('should call before and after advices when invoking the method', async () => {
-        await bean.setInstance(testInstance);
+        bean.setInstance(testInstance);
+        bean.setInjected({});
         const proxy: any = bean.createProxy();
         const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
         const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
@@ -159,16 +148,21 @@ describe('Bean', () => {
       });
 
       it('should call after throw advices when invoking the method', async () => {
-        await bean.setInstance(testInstance);
+        bean.setInstance(testInstance);
+        bean.setInjected({});
+
         const proxy: any = bean.createProxy();
         const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
-        const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
+        const handleErrorSpy = sandbox.spy(
+          InterceptorPromiseStrategy.prototype,
+          'handleError',
+        );
         const wireFieldAdvicesSpy = sinon.spy(bean, 'wireFieldAdvices');
 
         const result = await proxy.testMethod('example', true);
 
         expect(wireMethodAdvicesSpy.callCount).to.be.equal(1);
-        expect(wireExceptionAdvicesSpy.callCount).to.be.equal(1);
+        expect(handleErrorSpy.callCount).to.be.equal(1);
         expect(wireFieldAdvicesSpy.callCount).to.be.equal(0);
         expect(result).to.be.undefined;
         expect(adviceBefore.callCount).to.be.equal(1);
@@ -182,8 +176,6 @@ describe('Bean', () => {
     describe('createProxy with getters on sync method', () => {
       let adviceBefore;
       let adviceAfter;
-      let adviceBeforeSetter;
-      let adviceAfterSetter;
       let adviceAfterThrow;
       let testInstance: TestClassWithAdvices;
 
@@ -201,9 +193,6 @@ describe('Bean', () => {
       beforeEach(() => {
         adviceBefore = sinon.stub();
         adviceAfter = sinon.stub();
-
-        adviceBeforeSetter = sinon.stub();
-        adviceAfterSetter = sinon.stub();
         adviceAfterThrow = sinon.stub();
 
         Reflect.defineMetadata(
@@ -221,16 +210,6 @@ describe('Bean', () => {
           { testMethod: [adviceAfterThrow] },
           TestClassWithAdvices.prototype,
         );
-        Reflect.defineMetadata(
-          ADVICES_SETTER_BEFORE,
-          { testMethod: [adviceBeforeSetter] },
-          TestClassWithAdvices.prototype,
-        );
-        Reflect.defineMetadata(
-          ADVICES_SETTER_AFTER,
-          { testMethod: [adviceAfterSetter] },
-          TestClassWithAdvices.prototype,
-        );
 
         testInstance = new TestClassWithAdvices();
         bean = new Bean(TestClassWithAdvices);
@@ -238,7 +217,8 @@ describe('Bean', () => {
 
       it('should call before and after advices when invoking the method', async () => {
         await bean.setInstance(testInstance);
-        const proxy = bean.createProxy();
+        bean.setInjected({});
+        const proxy: any = bean.createProxy();
         const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
         const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
         const wireFieldAdvicesSpy = sinon.spy(bean, 'wireFieldAdvices');
@@ -252,14 +232,13 @@ describe('Bean', () => {
         expect(result).to.be.equal('testMethod example');
         expect(adviceBefore.callCount).to.be.equal(1);
         expect(adviceAfter.callCount).to.be.equal(1);
-        expect(adviceBeforeSetter.callCount).to.be.equal(0);
-        expect(adviceAfterSetter.callCount).to.be.equal(0);
         expect(adviceAfterThrow.callCount).to.be.equal(0);
       });
 
       it('should call after throw advices when invoking the method', async () => {
         await bean.setInstance(testInstance);
-        const proxy = bean.createProxy();
+        bean.setInjected({});
+        const proxy: any = bean.createProxy();
         const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
         const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
         const wireFieldAdvicesSpy = sinon.spy(bean, 'wireFieldAdvices');
@@ -273,8 +252,6 @@ describe('Bean', () => {
 
         expect(adviceBefore.callCount).to.be.equal(1);
         expect(adviceAfter.callCount).to.be.equal(0);
-        expect(adviceBeforeSetter.callCount).to.be.equal(0);
-        expect(adviceAfterSetter.callCount).to.be.equal(0);
         expect(adviceAfterThrow.callCount).to.be.equal(1);
       });
     });
@@ -292,7 +269,9 @@ describe('Bean', () => {
       adviceBefore = sinon.stub();
       adviceAfter = sinon.stub();
 
-      await bean.setInstance(testInstance);
+      bean.setInstance(testInstance);
+      bean.setInjected({});
+
       beforeCallbacks = [];
       afterCallbacks = [];
       property = 'testField';
@@ -310,7 +289,7 @@ describe('Bean', () => {
     });
 
     it('should return default value if no callbacks are provided', () => {
-      const proxy = bean.createProxy();
+      const proxy: any = bean.createProxy();
 
       const wireMethodAdvicesSpy = sinon.spy(bean, 'wireMethodAdvices');
       const wireExceptionAdvicesSpy = sinon.spy(bean, 'wireExceptionAdvices');
@@ -371,11 +350,10 @@ describe('Bean', () => {
         TestClass.prototype,
       );
       bean = wireBeanProxy(TestClass, {}, externalContextCreatorStub);
-
     });
 
     it('should be used when proper metadata is detected', () => {
-      const res = bean.testMethod("asd");
+      const res = bean.testMethod('asd');
       expect((externalContextCreatorStub.create as any).callCount).to.be.equal(
         1,
       );

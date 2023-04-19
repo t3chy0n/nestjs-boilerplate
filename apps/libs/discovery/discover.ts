@@ -10,10 +10,9 @@ import {
   ADVICES_SETTER_BEFORE,
   PROXY_FIELD_DEFAULTS,
 } from '@libs/discovery/const';
-import { Bean } from '@libs/discovery/bean';
+import { Bean } from '@libs/discovery/bean/bean';
 
 export const discovered = [];
-
 
 export function ProvideIn<T = any>(
   inject?: Array<InjectionToken | OptionalFactoryDependency>,
@@ -44,7 +43,7 @@ export function ProvideIn<T = any>(
       module,
     );
 
-    const instanceToken = `AUTO_DISCOVERY_${target.name}`
+    const instanceToken = `AUTO_DISCOVERY_${target.name}`;
 
     Reflect.defineMetadata(
       MODULE_METADATA.PROVIDERS,

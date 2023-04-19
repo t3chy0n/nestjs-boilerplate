@@ -2,11 +2,7 @@ import {
   IBootstrapConfiguration,
   IConfiguration,
 } from '@libs/configuration/interfaces/configuration.interface';
-import {
-  BootstrapConfig,
-  Config,
-  ConfigProperty,
-} from './config.decorators';
+import { BootstrapConfig, Config, ConfigProperty } from './config.decorators';
 import { ConfigValueWrongTypeException } from '@libs/configuration/exceptions/config-value-wrong-type.exception';
 import {
   spyOnDiscoveryModuleAnnotations,

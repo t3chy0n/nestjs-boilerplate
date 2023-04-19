@@ -16,7 +16,7 @@ import {
   FACTORY_USED_METHOD_NAME,
   PROXY_INJECT_DEPS,
 } from '@libs/discovery/const';
-import { Bean } from '@libs/discovery/bean';
+import { Bean } from '@libs/discovery/bean/bean';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 
 type ScoredModuleAssignment = {
@@ -163,7 +163,9 @@ export const moduleAutoMatch = () => {
     const injectablePath = idx.split('||')[0];
     const matchedModule = getBestMatchingModule(injectablePath);
 
-    logger.log(`Matching factory ${injectable.name} to ${matchedModule.name}`);
+    logger.log(
+      `Matching factory ${injectable.constructor.name} to ${matchedModule.name}`,
+    );
 
     const providers: Provider[] =
       Reflect.getMetadata(MODULE_METADATA.PROVIDERS, matchedModule) || [];

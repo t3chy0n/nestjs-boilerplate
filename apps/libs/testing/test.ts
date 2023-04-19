@@ -1,4 +1,4 @@
-import { Bean } from '@libs/discovery/bean';
+import { Bean } from '@libs/discovery/bean/bean';
 import { AnyConstructor } from '@libs/lazy-loader/types';
 import * as Advices from '@libs/discovery/decorators/advices.decorators';
 import * as Discovery from '@libs/discovery/decorators/injectable.decorator';
@@ -14,23 +14,19 @@ export const wireBeanProxy = (
   const instance = new Ctor(...arg);
   const bean = new Bean(Ctor, inject, externalContextCreator);
   bean.setInstance(instance);
-  return bean.createProxy();
+  return bean.createProxy() as any;
 };
 
 export function spyOnDiscoveryModuleAnnotations(sandbox: sinon.SinonSandbox) {
   const spyBefore = sandbox.spy(Advices, 'Before');
   const spyAfter = sandbox.spy(Advices, 'After');
   const spyAfterThrow = sandbox.spy(Advices, 'AfterThrow');
-  const spyBeforeSetter = sandbox.spy(Advices, 'BeforeSetter');
-  const spyAfterSetter = sandbox.spy(Advices, 'AfterSetter');
   const spyInjectable = sandbox.spy(Discovery, 'Injectable');
 
   return {
     spyInjectable,
     spyBefore,
-    spyBeforeSetter,
     spyAfter,
-    spyAfterSetter,
     spyAfterThrow,
   };
 }
