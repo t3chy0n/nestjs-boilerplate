@@ -3,19 +3,14 @@ import { AppModule } from './app.module';
 import { writeFileSync } from 'fs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Converter from 'openapi-to-postmanv2';
-import {
-  IBootstrapConfiguration,
-  IConfiguration,
-} from '@libs/configuration/interfaces/configuration.interface';
+import { IConfiguration } from '@libs/configuration/interfaces/configuration.interface';
 import { ILogger } from '@libs/logger/logger.interface';
 import { RequestScopedValidationPipe } from '@libs/validation/validation.pipe';
 import { LoggerInterceptor } from '@libs/logger/logger.interceptor';
 import { HttpExceptionFilter } from '@libs/exceptions/http-exception.filter';
 import { IHttpExceptionFilter } from '@libs/exceptions/interfaces/http-exception-filter.interface';
-import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
-import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
-import {moduleAutoMatch} from "@libs/discovery/utils";
+import { moduleAutoMatch } from '@libs/discovery/utils';
 
 const PORT_CONFIG_PATH = 'port';
 

@@ -76,7 +76,7 @@ const TracedField = () =>
       ctx.span?.setStatus(SpanStatusCode.ERROR);
       ctx.span?.end();
 
-      throw exception;
+      // throw exception;
     }),
   );
 
