@@ -29,6 +29,20 @@ export class MethodWrapperFactory {
           }
         : instance[property];
 
+      const withBeforeAdvice = (...args) => {
+        this.metadata.beforeAdvices[property.toString()]?.map((call) =>
+          call(
+            ctx,
+            instance,
+            property,
+            this.instanceData.getInjected(),
+            ...args,
+          ),
+        );
+
+        return method.call(instance, ...args);
+      };
+
       if (
         this.metadata.shouldUseExternalContext &&
         this.externalContextCreator
@@ -36,7 +50,7 @@ export class MethodWrapperFactory {
         return this.externalContextCreator.create(
           instance,
           // proxy.bind(parentClass.instance),
-          method,
+          withBeforeAdvice,
           property.toString(),
           BEAN_METHOD_ARGS_METADATA_KEY,
           this.metadata.paramsFactory
@@ -48,7 +62,7 @@ export class MethodWrapperFactory {
           this.metadata.contextType,
         );
       }
-      return method;
+      return withBeforeAdvice;
     };
   }
 }

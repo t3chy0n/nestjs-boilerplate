@@ -9,25 +9,18 @@ import {
   ExternalContextCreator,
   ParamsFactory,
 } from '@nestjs/core/helpers/external-context-creator';
-import { groupBy } from 'lodash';
-import {
-  INCOMMING_METADATA_KEY,
-  OUTGOING_METADATA_KEY,
-} from '@libs/messaging/consts';
-import { MessagingMetadata } from '@libs/messaging/dto/messaging.metadata';
-import { MessagingConfiguration } from '@libs/messaging/messaging.configuration';
-import { ILogger } from '@libs/logger/logger.interface';
 import { IMessagingConnection } from '@libs/messaging/interfaces/messaging-connection.interface';
-import { DiscoveredMethodWithMeta } from '@golevelup/nestjs-discovery/lib/discovery.interfaces';
-import { OutgoingChannelDto } from '@libs/messaging/dto/outgoing-channel.dto';
-import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
 import { MessagingParamType } from '@libs/messaging/decorators/message.decorator';
-import { BEAN_METHOD_ARGS_METADATA_KEY } from '@libs/discovery/const';
+import { validateValue } from '@libs/validation/validation.utils';
 
 export class MessagingParamsFactory implements ParamsFactory {
   exchangeKeyForValue(type: number, data: ParamData, args: any): any {
     switch (type) {
       case MessagingParamType.MESSAGE:
+        const result = args[type];
+        const typeMeta = Reflect.getMetadata('design:type', result);
+        validateValue(args[type], typeMeta);
+        return args[type];
       case MessagingParamType.INCOMING_CONFIGURATION:
         return args[type];
       default:
@@ -44,7 +37,6 @@ export class MessagingInstaller implements OnApplicationBootstrap {
   constructor(
     @Inject('MESSAGING_CONNECTIONS')
     private readonly connections: IMessagingConnection[],
-
   ) {}
   public async onApplicationBootstrap() {
     if (MessagingInstaller.bootstrapped) {

@@ -42,7 +42,6 @@ export class Bean<T> {
     ctx: Record<any, any>,
   ) {
     const instance = this.getInstance();
-    const injected = this.instanceData.getInjected();
     const methodFactory = this.methodFactory.wrapper(ctx, property);
     //If it's a function we call all defined callbacks and return overriden method,
     //To invoke finisher callbacks after original operation is done.4
@@ -50,13 +49,10 @@ export class Bean<T> {
       console.log('Proxy error not a function');
     }
 
-    const results = beforeCallbacks?.map((call) =>
-      call(ctx, instance, property, injected),
-    ) ?? [this.metadata.defaults[property]];
-
     const overridden = (...args) => {
       const instance = this.getInstance();
       const injected = this.instanceData.getInjected();
+
       try {
         const interceptorFactory = new BeanInterceptorFactory<T>(
           methodFactory,
@@ -161,6 +157,8 @@ export class Bean<T> {
       if (!target) {
         throw new Error('There is no target for a Bean');
       }
+      if (property === '__proto__') return target.prototype;
+      if (property === 'prototype') return target.prototype;
       if (SKIP_BEAN_PROXY_TRAPS_FOR.includes(property.toString())) {
         return target.prototype[property];
       }
@@ -176,6 +174,17 @@ export class Bean<T> {
         );
       }
 
+      const hasMetadata =
+        Reflect.getMetadataKeys(instance, property).length > 0;
+      if (
+        !instance[property] &&
+        !target.prototype[property] &&
+        !target[property] &&
+        !hasMetadata
+      ) {
+        return null;
+      }
+
       if (!this.instanceData.getInjected()) {
         this.logger.warn(
           'Aspect Injected values are not yet resolved, skipping proxy trap',
@@ -188,15 +197,15 @@ export class Bean<T> {
       try {
         if ('function' === fieldType) {
           return this.wireMethodAdvices(
-            this.metadata.getters[property] ?? [],
-            this.metadata.getterFinishers[property] ?? [],
+            this.metadata.beforeAdvices[property] ?? [],
+            this.metadata.afterAdvices[property] ?? [],
             property,
             ctx,
           );
         } else {
           return this.wireFieldAdvices(
-            this.metadata.getters[property] ?? [],
-            this.metadata.getterFinishers[property] ?? [],
+            this.metadata.beforeAdvices[property] ?? [],
+            this.metadata.afterAdvices[property] ?? [],
             property,
             ctx,
           );
@@ -218,6 +227,11 @@ export class Bean<T> {
         instance[prop] = value;
         console.log('Setter on proxy');
         return true;
+      },
+      // getOwnPropertyDescriptor(target: T, p: string | symbol): PropertyDescriptor | undefined
+
+      getPrototypeOf(target: T) {
+        return Object.getPrototypeOf(target);
       },
     });
 

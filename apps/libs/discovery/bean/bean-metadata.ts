@@ -19,9 +19,9 @@ import {
 } from '@libs/discovery/types';
 
 export class BeanMetadata<T> {
-  public readonly getters: Record<string, BeforeAdviceCallback[]>;
+  public readonly beforeAdvices: Record<string, BeforeAdviceCallback[]>;
   public readonly callWrapper: CallWrapperAdviceCallback;
-  public readonly getterFinishers: Record<string, AfterAdviceCallback[]>;
+  public readonly afterAdvices: Record<string, AfterAdviceCallback[]>;
   public readonly afterThrowings: Record<
     string,
     AfterExceptionAdviceCallback[]
@@ -36,13 +36,13 @@ export class BeanMetadata<T> {
   public readonly defaults: any[];
 
   constructor(private readonly target: AnyConstructor<T>) {
-    this.getters =
+    this.beforeAdvices =
       Reflect.getMetadata(ADVICES_BEFORE, this.target.prototype) || [];
     this.callWrapper = Reflect.getMetadata(
       ADVICES_CALL_WRAPPER,
       this.target.prototype,
     );
-    this.getterFinishers =
+    this.afterAdvices =
       Reflect.getMetadata(ADVICES_AFTER, this.target.prototype) || [];
     this.afterThrowings =
       Reflect.getMetadata(ADVICES_AFTER_THROW, this.target.prototype) || [];

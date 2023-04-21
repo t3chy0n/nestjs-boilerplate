@@ -31,11 +31,12 @@ export function isFieldDecorator(args: any[]): args is [any, any] {
   return args.length >= 2 && typeof args[1] === 'string' && !args[2]?.value;
 }
 
+export function getParameterMetadata() {}
 export function createParamDecorator(
   paramtype: MessagingParamType,
 ): (...pipes: (Type<PipeTransform> | PipeTransform)[]) => ParameterDecorator {
   return (...pipes: (Type<PipeTransform> | PipeTransform)[]) =>
-    (target, key, index) => {
+    (target, key, index, ...args2: any[]) => {
       const args =
         Reflect.getMetadata(
           BEAN_METHOD_ARGS_METADATA_KEY,

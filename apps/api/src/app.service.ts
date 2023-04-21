@@ -1,10 +1,4 @@
-import {
-  HttpException,
-  Logger,
-  Provider,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Provider } from '@nestjs/common';
 import { Outgoing } from '@libs/messaging/decorators/outgoing.decorator';
 import { Incoming } from '@libs/messaging/decorators/incoming.decorator';
 import {
@@ -16,11 +10,13 @@ import { IsDefined, ValidateNested } from 'class-validator';
 export class TestDto {
   // @IsNumber()
   // @Min(0)
-  challengeAmount: number;
+  @IsDefined()
+  aasd: number;
 }
 
 export class Payload {
-  content: string;
+  @IsDefined()
+  queue22123: string;
 }
 
 import {
@@ -113,7 +109,7 @@ export class AppService {
 
   @Incoming('test_outgoing_kafka_message')
   getHelloKafka2(msg: Payload): string {
-    console.error('Received: ', msg.content);
+    console.error('Received: ', msg);
     return 'Hello World kafka!';
   }
 

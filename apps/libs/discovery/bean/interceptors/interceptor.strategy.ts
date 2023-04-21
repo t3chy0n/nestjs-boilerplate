@@ -12,7 +12,7 @@ export class InterceptorStrategy {
 
   intercept(...args: any[]) {
     try {
-      this.interceptors?.map((cb) => cb.call(this.result, ...args));
+      this.interceptors?.map((cb) => cb.call(null, this.result, ...args));
       return this.result;
     } catch (e) {}
   }

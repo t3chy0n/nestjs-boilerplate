@@ -56,7 +56,8 @@ export function validatePrimitiveValue(value, type, composedConfigKey) {
 }
 
 function validateObjectValue(value, type) {
-  const e = validateSync(plainToInstance(type, value));
+  const plain = plainToInstance(type, value);
+  const e = validateSync(plain);
   if (e.length > 0) {
     throw new ConfigValueWrongTypeException(e);
   }
@@ -67,7 +68,6 @@ export const ConfigProperty = (key?: string): PropertyDecorator => {
     createPropertyDecorator(CONFIGURATION_KEY_METADATA, { key }, true),
     Before((ctx, target, property, inj: any) => {
       const { config, ...rest }: { config: IConfiguration } = inj;
-      const asd2 = Reflect.getMetadataKeys(target);
       const configKey = Reflect.getMetadata(
         CONFIGURATION_MAIN_KEY_METADATA,
         target,

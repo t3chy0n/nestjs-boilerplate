@@ -9,6 +9,10 @@ import {
 } from '@libs/discovery';
 import { ChannelConfigurationDto } from '@libs/messaging/dto/channel-configuration.dto';
 import { Traced } from '@libs/telemetry/decorators/traced.decorator';
+import { validateValue } from '@libs/validation/validation.utils';
+import { MessagingParamType } from '@libs/messaging/decorators/message.decorator';
+import { BEAN_METHOD_ARGS_METADATA_KEY } from '@libs/discovery/const';
+import { MessagingValidationException } from '@libs/messaging/exceptions/messaging-validation-exception';
 
 export const IncomingOld = (event: string) => {
   return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
@@ -61,7 +65,14 @@ export const IncomingNew = (event?: string): MethodDecorator => {
       },
     ),
 
-    Before((ctx, target, property, { logger }, payload: any) => {
+    Before((ctx, target, property, { logger }, ...args) => {
+      const paramsTypesMetadata =
+        Reflect.getMetadata('design:paramtypes', target, property) ?? [];
+      let idx = 0;
+      for (const typeMeta of paramsTypesMetadata) {
+        validateValue(args[idx], typeMeta, MessagingValidationException);
+        idx++;
+      }
       logger.debug(
         `Received message in ${target.constructor.name}:${property.toString()}`,
       );
