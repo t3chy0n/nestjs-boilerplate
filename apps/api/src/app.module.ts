@@ -18,9 +18,10 @@ import { TradesService } from '@app/trades.service';
 import { FlinkFunctionsModule } from '@libs/flink/flink-functions.installer';
 import { ConfigurationModule } from '@libs/configuration/configuration.module';
 
-import {Module} from "@libs/discovery/decorators/module.decorator";
-import {LoggerModule} from "@libs/logger/logger.module";
-import {TelemetryModule} from "@libs/telemetry/telemetry.module";
+import { Module } from '@libs/discovery/decorators/module.decorator';
+import { LoggerModule } from '@libs/logger/logger.module';
+import { TelemetryModule } from '@libs/telemetry/telemetry.module';
+import { OpenaiModule } from '@libs/openai/openai.module';
 
 const modules: any[] = [
   DbModule,
@@ -38,6 +39,7 @@ const modules: any[] = [
   ProfilesModule,
   LoggerModule,
   ConfigurationModule,
+  OpenaiModule,
 ];
 
 if (process.env.NODE_ENV !== 'production') {
@@ -58,6 +60,6 @@ if (process.env.NODE_ENV !== 'production') {
 @Module({
   imports: modules,
   controllers: [AppController],
-  providers: [ RequestScopedValidationPipe ],
+  providers: [RequestScopedValidationPipe],
 })
 export class AppModule {}

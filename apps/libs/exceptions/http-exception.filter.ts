@@ -28,12 +28,14 @@ export class HttpExceptionFilter implements IHttpExceptionFilter {
 
       this.logger.error(`Error ${typeof exception}: ${JSON.stringify(res)}`);
 
-      response?.status(status).json({
-        status: exception.getStatus(),
-        message: exception.message,
-        ...(typeof res === 'object' ? res : { message: res }),
-      });
-      return;
+      if ('function' === typeof response?.status) {
+        response?.status(status).json({
+          status: exception.getStatus(),
+          message: exception.message,
+          ...(typeof res === 'object' ? res : { message: res }),
+        });
+        return;
+      }
     }
 
     ///Log not translated errors, we need to have visibility on this, if we miss or missimplement some exceptions

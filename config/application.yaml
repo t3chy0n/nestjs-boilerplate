@@ -142,6 +142,9 @@ db:
   password: admin
   database: boilerplate
 
+openai:
+  api-key: test
+
 #Configuration for db when application runs in docker-compose
 %docker-compose:
   db:
