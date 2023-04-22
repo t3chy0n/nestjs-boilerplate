@@ -75,15 +75,18 @@ export class TestConfig {
 
 const JsonSchemaEnrichmentPrompt = `
   Given a JSONSchema of configuration, do following:
-  0. Group all config keys as parents, by realistic company departments.
+  0. Group all config keys and parents, by realistic company departments.
      add all detected departments in property's __aiMetadata as array of strings named 'departments'
   1. For parent nodes, prepare a 'title' and 'description' describing what section is about.
   2. Infer 'title' for every property in a schema.
   3. Infer 'description', that will best describe given property. Explain in details what key does.
-  4. Infer most suitable 'iconSVG' from simple-icons library. If you cant find anything, fallback to selecting CSS 'iconClass' 
+  4. Infer 'placeholder', for an input field.
+  5. Infer whether or not field shoulbe be 'secret' as boolean value,
+  6. Infer most suitable 'iconSVG' from simple-icons library for a property only if it exists in library. Also suggest CSS class 'iconClass' 
      for this config key from fontawesome. Select most appropriate color to match true logo and save as 'iconColor' in hex.
-  5. All above values should be added it __aiMetadata object on property value level
-  7. Output valid enriched raw json only without any extra text.
+  7. All above values should be added it __aiMetadata object on property value level.
+     Remove original schema properties other than __aiMetadata properties at this level.
+  8. Output valid enriched raw json only without any extra text,
   
   JSONSchema: {
   "$id": "https://example.com/person.schema.json",
@@ -111,6 +114,14 @@ const JsonSchemaEnrichmentPrompt = `
     }
   }
 }
+`;
+
+const TemplatedEmailGeneration = (whatFor: string) => `
+  1. Generate an mjml email which will be used ${whatFor}
+  2. Email will be sent from commertial app, it needs to have proper layout, styling and images
+  3. Deduce all templateable fields and remember them as 'fields'
+  4. Structure of email should be json of form { "fields": <fields here>, "email": <generated email here>}
+  5. Print only raw json without any extra text
 `;
 
 @Injectable()
