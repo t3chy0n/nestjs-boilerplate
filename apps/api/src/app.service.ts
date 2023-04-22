@@ -6,6 +6,7 @@ import {
   Message,
 } from '@libs/messaging/decorators/message.decorator';
 import { IsDefined, ValidateNested } from 'class-validator';
+import * as JSON5 from 'json5';
 
 export class TestDto {
   // @IsNumber()
@@ -75,13 +76,12 @@ export class TestConfig {
 const JsonSchemaEnrichmentPrompt = `
   Given a JSONSchema of configuration, do following:
   0. Group all config keys as parents, by realistic company departments.
-     add all detected departments in root node's __aiMetadata as array of strings named 'departments'
-     add respective department on property level __aiMetadata.
+     add all detected departments in property's __aiMetadata as array of strings named 'departments'
   1. For parent nodes, prepare a 'title' and 'description' describing what section is about.
   2. Infer 'title' for every property in a schema.
   3. Infer 'description', that will best describe given property. Explain in details what key does.
   4. Infer most suitable 'iconSVG' from simple-icons library. If you cant find anything, fallback to selecting CSS 'iconClass' 
-     for this config key from fontawesome.
+     for this config key from fontawesome. Select most appropriate color to match true logo and save as 'iconColor' in hex.
   5. All above values should be added it __aiMetadata object on property value level
   7. Output valid enriched raw json only without any extra text.
   
@@ -91,7 +91,7 @@ const JsonSchemaEnrichmentPrompt = `
   "title": "Person",
   "type": "object",
   "properties": {
-    "redis": {
+    "rabbitmq": {
       "host": {
         "type": "string",
       },
@@ -140,7 +140,7 @@ export class AppService {
     let raw;
     try {
       raw = res.replace(/\n/g, '');
-      json = JSON.parse(`${raw}`);
+      json = JSON5.parse(`${raw}`);
     } catch (e) {
       console.error('Couldnt parse', e);
     }
