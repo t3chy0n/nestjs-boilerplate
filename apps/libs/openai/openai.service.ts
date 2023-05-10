@@ -7,7 +7,7 @@ import { OpenAIConfiguration } from '@libs/openai/openai.configuration';
 
 enum OpenAIModel {
   DAVINCI = 'text-davinci-003',
-  DAVINCI_CODE = 'code-davinci-002',
+  CHAT_GPT = 'gpt-3.5-turbo',
 }
 @Injectable({ provide: IAIService })
 @Traced
@@ -32,6 +32,24 @@ export class OpenAIService implements IAIService {
 
     let res = '';
     for (const parts of completion.data.choices) res = `${res}${parts.text}`;
+
+    return res;
+  }
+  async chatQuery(prompt: string): Promise<string> {
+    const models = await this.models();
+
+    const history: any[] = [{ role: 'user', content: prompt }];
+
+    const completion = await this.openAi.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: history,
+      temperature: 0.2,
+    });
+
+    let res = '';
+    for (const parts of completion.data.choices) {
+      res = `${res}${parts.message.content}`;
+    }
 
     return res;
   }
